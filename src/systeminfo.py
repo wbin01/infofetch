@@ -1,54 +1,1074 @@
 #!/usr/bin/env python3
 import os
-
-import ansicolorimage
-
-
-# sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import re
+import subprocess
 
 
 class SystemInfo(object):
-    """..."""
+    """Create an object of type 'LinuxInfo'
 
-    def __init__(self) -> None:
-        """..."""
-        self.__height = 25
-        self.__width = 50
-        self.__base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.__os_informations = self.__get_os_informations()
-        self.__os_logo = self.__get_os_logo()
+    Gets information about the operating system.
+    """
+    def __init__(self):
+        """Class constructor
 
-    def fetch(self) -> None:
-        """..."""
-        self.__set_same_amount_of_lines_for_logo_and_info()
+        This object contains a lot of information, so, to keep it light,
+        all properties start out empty and are filled in as the accessor
+        methods are used.
+        """
+        self.__user_name = None
+        self.__username = None
+        self.__hostname = None
+        self.__all_release_info = None
+        self.__pretty_name = None
+        self.__name = None
+        self.__name_id = None
+        self.__codename = None
+        self.__version = None
+        self.__kernel = None
+        self.__kernel_version = None
+        self.__architecture = None
+        self.__motherboard = None
+        self.__motherboard_version = None
+        self.__cpu = None
+        self.__gpu = None
+        self.__ram = None
+        self.__ram_used = None
+        self.__ram_free = None
+        self.__swap = None
+        self.__swap_used = None
+        self.__swap_free = None
+        self.__screen_resolution = None
+        self.__uptime = None
+        self.__shell = None
+        self.__desktop_environment = None
+        self.__desktop_environment_version = None
+        self.__window_manager = None
+        self.__package_manager = None
+        self.__display_server = None
+        self.__packages = None
+        self.__flatpak_packages = None
+        self.__snap_packages = None
+        self.__font = None
+        self.__browser = None
 
-        for img_line, text_line in zip(
-                self.__os_logo.ansi_lines, self.__os_informations):
-            print(img_line, '\x1b[38;2;{}m{}\x1B[0m'.format(
-                self.__os_logo.image_accent_color, text_line))
+    def get_user_name(self) -> str:
+        """The name of the user
 
-    def __get_os_logo(self) -> ansicolorimage:
-        # test
-        return ansicolorimage.AnsiColorImage(
-            url_image=os.path.join(self.__base_dir, 'resources', 'neon.png'),
-            contrast=1.3, brightness=0.85)
+        The correct name that the user registered, not the 'username'.
 
-    @staticmethod
-    def __get_os_informations() -> list:
-        # test
-        text = ('10\n' * 10).split()
+        :return: String containing the name of the user
+        """
+        if self.__user_name:
+            return self.__user_name
 
-        return text
+        self.__user_name = subprocess.getoutput(
+            "cat /etc/passwd | grep `echo $HOME` | awk -F ':' '{print $5}'")
 
-    def __set_same_amount_of_lines_for_logo_and_info(self) -> None:
-        # Same height
+        return self.__user_name
 
-        len_image = len(self.__os_logo.ansi_lines)
-        len_info = len(self.__os_informations)
+    def get_username(self) -> str:
+        """The username
 
-        if len_image < len_info:
-            for _ in range(len_info - len_image):
-                self.__os_logo.ansi_lines.append(' ' * self.__os_logo.width)
+        The username used to log in, not the correct or correctly
+        formatted name.
+
+        :return: String containing username
+        """
+        if self.__username:
+            return self.__username
+
+        self.__username = os.environ['USER']
+
+        return self.__username
+
+    def get_hostname(self) -> str:
+        """The host name
+
+        The recognition name on the network.
+
+        :return: String containing the hostname
+        """
+        if self.__hostname:
+            return self.__hostname
+
+        # Fix $HOSTNAME missing
+        if subprocess.getoutput('cat /etc/hostname ; echo $?')[-1] == '0':
+            hostname = subprocess.getoutput('cat /etc/hostname')
         else:
-            for _ in range(len_image - len_info):
-                self.__os_informations.append(' ')
+            hostname = subprocess.getoutput('echo $HOSTNAME')
+
+        # Fix $HOSTNAME in Fedora
+        if 'fedora' in self.get_name().lower():
+            hostname = subprocess.getoutput('printf "${HOSTNAME%%.*}"')
+
+        self.__hostname = hostname
+        return self.__hostname
+
+    def get_all_release_info(self) -> dict:
+        """cat /etc/os-release
+
+        All information from the '/etc/os-release' file in a dictionary.
+
+        :return: Dict containing information from the '/etc/os-release' file
+        """
+        if self.__all_release_info:
+            return self.__all_release_info
+
+        # Return var
+        all_release_info = dict()
+
+        cat_release = subprocess.getoutput('cat /etc/os-release').split('\n')
+        for item_release in cat_release:
+            items = item_release.split('=')
+            all_release_info[items[0]] = items[1].strip('"').strip("'")
+
+        # HACK: Identify some known distributions that do not configure
+        # version information as they should
+        hack_name = False
+        name = str()
+        name_id = str()
+
+        if 'ubuntu' in all_release_info['NAME'].lower():
+            # Lubuntu
+            if 'openbox' in subprocess.getoutput('ls /usr/share/lubuntu/'):
+                hack_name = True
+                name = 'Lubuntu'
+                name_id = 'lubuntu'
+
+            # ubuntu Budgie
+            elif 'Budgie Welcome' in subprocess.getoutput(
+                    'ubuntu-budgie-welcome.budgie-welcome --version'):
+                hack_name = True
+                name = 'Ubuntu Budgie'
+                name_id = 'ubuntubudgie'
+
+            # Xubuntu
+            elif 'applications' in subprocess.getoutput(
+                    'ls /usr/share/xubuntu/'):
+                hack_name = True
+                name = 'Xubuntu'
+                name_id = 'xubuntu'
+
+        if hack_name:
+            all_release_info['NAME'] = name
+            all_release_info['ID'] = name_id
+            if 'PRETTY_NAME' in all_release_info:
+                all_release_info['PRETTY_NAME'] = all_release_info[
+                    'PRETTY_NAME'].replace('Ubuntu', name)
+
+        self.__all_release_info = all_release_info
+        return self.__all_release_info
+
+    def get_pretty_name(self) -> str:
+        """Verbally formatted name
+
+        The pretty name in the '/etc/os-release' file.
+
+        :return: String containing pretty name
+        """
+        if self.__pretty_name:
+            return self.__pretty_name
+
+        if not self.__all_release_info:
+            self.get_all_release_info()
+
+        if 'PRETTY_NAME' in self.__all_release_info:
+            self.__pretty_name = self.__all_release_info['PRETTY_NAME']
+
+        return self.__pretty_name
+
+    def get_name(self) -> str:
+        """Operating system name
+
+        The commercially formatted name, which can contain uppercase letters
+        and spaces.
+
+        :return: String containing the name of the operating system
+        """
+        if self.__name:
+            return self.__name
+
+        if not self.__all_release_info:
+            self.get_all_release_info()
+
+        if 'NAME' in self.__all_release_info:
+            self.__name = self.__all_release_info['NAME']
+        return self.__name
+
+    def get_name_id(self) -> str:
+        """Operating system identity
+
+        The identifier formatted name for code or database; usually in
+        lowercase and without spaces.
+
+        :return: String containing the operating system ID
+        """
+        if self.__name_id:
+            return self.__name_id
+
+        if not self.__all_release_info:
+            self.get_all_release_info()
+
+        if 'ID' in self.__all_release_info:
+            self.__name_id = self.__all_release_info['ID']
+        elif 'NAME' in self.__all_release_info:
+            self.__name_id = self.__all_release_info['NAME'].lower()
+
+        return self.__name_id
+
+    def get_codename(self) -> str:
+        """Operating system codename
+
+        The code name is the commercial one, to easily identify the versions 
+        of the operating system.
+        Not all systems do.
+
+        :return: String containing the codename of the operating system
+        """
+        if self.__codename:
+            return self.__codename
+
+        if not self.__all_release_info:
+            self.get_all_release_info()
+
+        if 'VERSION_CODENAME' in self.__all_release_info:
+            self.__codename = self.__all_release_info['VERSION_CODENAME']
+        elif 'CODENAME' in self.__all_release_info:
+            self.__codename = self.__all_release_info['CODENAME']
+
+        return self.__codename
+
+    def get_version(self) -> str:
+        """Operating system version
+
+        The current version of the operating system.
+
+        :return: String containing the version of the operating system
+        """
+        if self.__version:
+            return self.__version
+
+        if not self.__all_release_info:
+            self.get_all_release_info()
+
+        if 'VERSION_ID' in self.__all_release_info:
+            self.__version = self.__all_release_info['VERSION_ID']
+        elif 'VERSION' in self.__all_release_info:
+            self.__version = self.__all_release_info['VERSION']
+
+        return self.__version
+
+    def get_kernel(self) -> str:
+        """Operating system kernel name
+
+        The current operating system kernel.
+
+        :return: String containing the kernel name
+        """
+        if self.__kernel:
+            return self.__kernel
+
+        self.__kernel = subprocess.getoutput(
+            'cat /proc/sys/kernel/ostype').title()
+        return self.__kernel
+
+    def get_kernel_version(self) -> str:
+        """Operating system kernel version
+
+        The current kernel version of the operating system.
+
+        :return: String containing the kernel version
+        """
+        if self.__kernel_version:
+            return self.__kernel_version
+
+        regex = re.compile(r'(\.x\d.+|x\d.+)')
+        self.__kernel_version = regex.sub(
+            '', subprocess.getoutput('cat /proc/sys/kernel/osrelease'))
+
+        return self.__kernel_version
+
+    def get_architecture(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__architecture:
+            return self.__architecture
+
+        self.__architecture = subprocess.getoutput('getconf LONG_BIT').title()
+        return self.__architecture
+
+    def get_motherboard(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__motherboard:
+            return self.__motherboard
+
+        self.__motherboard = subprocess.getoutput(
+            'cat /sys/devices/virtual/dmi/id/product_name')
+        return self.__motherboard
+
+    def get_motherboard_version(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__motherboard_version:
+            return self.__motherboard_version
+
+        self.__motherboard_version = subprocess.getoutput(
+            'cat /sys/devices/virtual/dmi/id/product_version')
+        return self.__motherboard_version
+
+    def get_cpu(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__cpu:
+            return self.__cpu
+        cmd = ("cat /proc/cpuinfo | grep 'model name' | "
+               "sed -n 1p | sed 's/.*:.//g;s/(\w*)//g'")
+        self.__cpu = subprocess.getoutput(cmd)
+        return self.__cpu
+
+    def get_gpu(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__gpu:
+            return self.__gpu
+
+        gpu = str()
+        found = False
+
+        # 1° method ||| dica para achar os drivers: lspci -v
+        gpuread = subprocess.getoutput('lspci | grep 3D')
+        if 'lspci:' not in gpuread and '/bin/sh:' not in gpuread and gpuread:
+            regex = re.findall(r'^.+: (.+) \(rev .+$', gpuread)
+            if regex:
+                gpu = regex[0]
+                found = True
+
+        # 2° method
+        if not found:
+            board = str()
+            id_cmd = "lspci |grep -i graphics| awk '{ print $1 }'"
+            gpuid = subprocess.getoutput(id_cmd)
+            if gpuid.replace(':', '').replace('.', '').isdigit():
+                gpu_cmd = f'cat "/sys/bus/pci/devices/0000:{gpuid}/label"'
+                gpu_board = subprocess.getoutput(gpu_cmd).strip()
+                board = gpu_board if 'cat: ' not in gpuread else board
+
+            gpuread = subprocess.getoutput('lspci | grep VGA')
+            if 'lspci:' in gpuread or '/bin/sh:' in gpuread:
+                gpuread = board
+
+            regex = re.findall(r'.+: (.+)', gpuread)
+            remove = re.findall(r'\(.+\)', gpuread)
+            if regex:
+                gpuread = regex[0]
+            if remove:
+                gpu = gpuread.replace(remove[0], '')
+
+            gpu += board
+            found = True
+
+        # Clear
+        if found:
+            if 'intel' in gpu.lower():
+                dirt = [
+                    'Corporation',
+                    'Core Processor',
+                    'Integrated Graphics Controller']
+                for i in dirt:
+                    gpu = gpu.replace(i, '')
+
+            if 'virtualbox' in gpu.lower():
+                gpu = 'VirtualBox Graphics Adapter'
+        else:
+            gpu = ''
+
+        self.__gpu = gpu.replace('  ', ' ')
+        return self.__gpu
+
+    def get_ram(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__ram:
+            return self.__ram
+        # Somente um método pega todas as informações das memórias
+        # para evitar repetir o comando do 'shell'
+
+        # Pegar linhas da memória ram e swap
+        memory_info = subprocess.getoutput("free -h")
+        memory_info = memory_info.replace(',', '.').split('\n')
+
+        ram_line = memory_info[1].split(' ')  # "memory_info[0]" é o cabeçalho
+        swap_line = memory_info[2].split(' ')
+
+        # Lista para armazenar as informações das memórias ram e swap
+        ram_info = list()
+        swap_info = list()
+
+        # Preencher as listas com caracteres válidos, removendo vazios
+        for ram in ram_line:
+            if ram != '':
+                ram_info.append(ram)
+        for swap in swap_line:
+            if swap != '':
+                swap_info.append(swap)
+
+        # Atribuir valores da memória ram
+        self.__ram = ram_info[1]
+        self.__ram_used = ram_info[2]
+        self.__ram_free = ram_info[3]
+        # Atribuir valores da memória swap
+        self.__swap = swap_info[1]
+        self.__swap_used = swap_info[2]
+        self.__swap_free = swap_info[3]
+
+        return self.__ram
+
+    def get_ram_used(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__ram_used:
+            return self.__ram_used
+
+        self.get_ram()
+        return self.__ram_used
+
+    def get_ram_free(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__ram_free:
+            return self.__ram_free
+
+        self.get_ram()
+        return self.__ram_free
+
+    def get_swap(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__swap:
+            return self.__swap
+
+        self.get_ram()
+        return self.__swap
+
+    def get_swap_used(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__swap_used:
+            return self.__swap_used
+
+        self.get_ram()
+        return self.__swap_used
+
+    def get_swap_free(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__swap_free:
+            return self.__swap_free
+
+        self.get_ram()
+        return self.__swap_free
+
+    def get_screen_resolution(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__screen_resolution:
+            return self.__screen_resolution
+
+        if subprocess.getoutput('xrandr ; echo $?')[-1] == '0':
+            resolution = subprocess.getoutput(
+                "xrandr | grep current | awk -F , '{print $2}'")
+            self.__screen_resolution = resolution.replace(
+                ' current ', '').replace(' x ', 'x')
+
+        return self.__screen_resolution
+
+    def get_uptime(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__uptime:
+            return self.__uptime
+
+        uptime = subprocess.getoutput('uptime -p')
+        if uptime[:7] == 'uptime:':
+            self.__uptime = subprocess.getoutput(
+                'uptime').split(',')[0][9:].replace('up', '').strip() + ' Hs'
+        else:
+            self.__uptime = uptime.replace('up ', '')
+
+        return self.__uptime
+
+    def get_shell(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__shell:
+            return self.__shell
+
+        self.__shell = subprocess.getoutput('basename $SHELL')
+        return self.__shell
+
+    def get_desktop_environment(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__desktop_environment:
+            return self.__desktop_environment
+
+        desktop_environment = subprocess.getoutput(
+            'echo $XDG_CURRENT_DESKTOP').replace(':', '-').strip()
+
+        # Limpar
+        dirt_to_clean = ['(', ')', "'", '"', 'X-']
+        for cleaning_item in dirt_to_clean:
+            self.__desktop_environment = desktop_environment.replace(
+                cleaning_item, '')
+
+        # Customizar
+        if 'kde' in self.__desktop_environment.lower():
+            self.__desktop_environment = 'Plasma (KDE)'
+
+        return self.__desktop_environment
+
+    def get_desktop_environment_version(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__desktop_environment_version:
+            return self.__desktop_environment_version
+
+        cmd_version = {
+            # 'budgie': "budgie-desktop --version | awk '{print $2}'",
+            'cinnamon': "cinnamon --version | awk '{print $2}'",
+            # deepin
+            'gnome': "gnome-shell --version | awk '{print $3}'",
+            'kde': "plasmashell --version | awk '{print $2}'",
+            # lxde
+            'lxqt': "lxqt-about -v | grep liblxqt | awk '{print $2}'",
+            # pantheon elementary
+            'xfce': "xfce4-about -V | grep xfce4-about | awk '{print $2}'",
+        }
+        de = self.get_desktop_environment().lower()
+        desktop_environment_version = str()
+        for cmd_version_key, cmd_version_value in cmd_version.items():
+            if cmd_version_key in de:
+                desktop_environment_version = subprocess.getoutput(
+                    cmd_version_value)
+                break
+
+        # Limpar
+        dirt_to_clean = ['(', ')', "'", '"', 'X-']
+        for cleaning_item in dirt_to_clean:
+            self.__desktop_environment_version = (
+                desktop_environment_version.replace(cleaning_item, ''))
+
+        # Customizar
+        error = ['bash: ', '/bin/sh: ']
+        for item_error in error:
+            if item_error in self.__desktop_environment_version.lower():
+                self.__desktop_environment_version = ''
+                break
+
+        return self.__desktop_environment_version
+
+    def get_window_manager(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__window_manager:
+            return self.__window_manager
+
+        cmd_xprop = subprocess.getoutput(
+            'xprop -root -notype _NET_SUPPORTING_WM_CHECK')
+        cmd_window_manager = subprocess.getoutput(
+            'xprop -id {} -notype -len 100 -f _NET_WM_NAME 8t '
+            '| grep WM_KEY'.format(
+                cmd_xprop.split()[-1])).split('=')[-1].replace('"', '').strip()
+
+        if cmd_window_manager == '':
+            cmd_xprop = subprocess.getoutput(
+                'xprop -root -notype _NET_SUPPORTING_WM_CHECK')
+            cmd_window_manager = subprocess.getoutput(
+                'xprop -id {} -notype -len 100 -f _NET_WM_NAME 8t '
+                '| grep WM_NAME'.format(
+                    cmd_xprop.split()[-1])).split('=')[-1].replace(
+                '"', '').strip()
+
+        self.__window_manager = cmd_window_manager.replace(',', ' | ').replace(
+            '(', '').replace(')', '')
+
+        if 'xprop:' in cmd_window_manager:
+            self.__window_manager = ''
+
+        # Custom
+        if self.__window_manager:
+            if 'mutter' in self.__window_manager.lower():
+                self.__window_manager = 'Mutter'
+
+        return self.__window_manager
+
+    def get_display_server(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__display_server:
+            return self.__display_server
+
+        self.__display_server = subprocess.getoutput('echo $XDG_SESSION_TYPE')
+
+        # Custom
+        if 'wayland' in self.__display_server.lower():
+            self.__display_server = 'Wayland'
+
+        return self.__display_server
+
+    def get_package_manager(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__package_manager:
+            return self.__package_manager
+
+        cmd_packages = {
+            'dpkg': 'dpkg --get-selections | grep -cv deinstall$',
+            'rpm': 'rpm -qa | wc -l',
+            'pacman': 'pacman -Qq --color never | wc -l',
+            'eopkg': 'eopkg list-installed | wc -l',
+        }
+
+        for cmd_packages_key, cmd_packages_value in cmd_packages.items():
+            number = int(subprocess.getoutput(cmd_packages_value).split()[-1])
+
+            if number > 0:
+                self.__package_manager = cmd_packages_key
+                self.__packages = str(number)
+
+        return self.__package_manager
+
+    def get_packages(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__packages:
+            return self.__packages
+
+        self.get_package_manager()
+
+        return self.__packages
+
+    def get_flatpak_packages(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__flatpak_packages:
+            return self.__flatpak_packages
+
+        number = int(subprocess.getoutput('flatpak list | wc -l').split()[-1])
+        if number > 0:
+            self.__flatpak_packages = str(number)
+
+        return self.__flatpak_packages
+
+    def get_snap_packages(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__snap_packages:
+            return self.__snap_packages
+
+        # Remove cabeçalho com: grep -v "^Name"
+        # number = int(subprocess.getoutput(
+        # 'snap list | grep -v "^Name" | wc -l').split()[-1])
+
+        # Remove cabeçalho com '-1' no fim
+        number = int(subprocess.getoutput('snap list | wc -l').split()[-1]) - 1
+        if number > 0:
+            self.__snap_packages = str(number)
+
+        return self.__snap_packages
+
+    def get_font(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__font:
+            return self.__font
+
+        self.__font = re.findall(r':.(.+)', subprocess.getoutput(
+            'fc-match'))[0].replace('"', '')
+        return self.__font
+
+    def get_browser(self) -> str:
+        """
+
+        :return:
+        """
+        if self.__browser:
+            return self.__browser
+
+        desktop_file = subprocess.getoutput(
+            'xdg-settings get default-web-browser').lower()
+        browser = desktop_file.replace('.desktop', '').replace('-', ' ')
+        bad_list = [
+            '/bin/sh:', 'xdg-settings:', 'leafpad',
+            'kwrite', 'gedit', 'kate', 'debian', 'sensible']
+        for bad_item in bad_list:
+            if bad_item in browser:
+                browser = ''
+
+        if '.' in browser:
+            regex_browser = re.findall(r'\.(\w+$)', browser)
+            if regex_browser:
+                browser = regex_browser[0]
+
+        browser = '' if browser == ' ' else browser
+        self.__browser = browser.title()
+
+        return self.__browser
+
+
+class ResumeSystemInfo(object):
+    """Create an object of type 'InfoFetch'
+
+    It gives access to various information about the
+    operating system, such as architecture, memory, cpu...
+    """
+
+    def __init__(self):
+
+        # Info lib
+        self.__os_info = SystemInfo()
+
+        # System
+        self.__distro_fetch_dict = {
+            'id': self.__os_info.get_name_id(),
+            'Header': self.__header(),
+            'OS': self.__os_name(),
+            'Architecture': self.__architecture(),
+            'Kernel': self.__kernel(),
+            'Board': self.__motherboard(),
+            'CPU': self.__cpu(),
+            'GPU': self.__gpu(),
+            'RAM': self.__ram(),
+            'Swap': self.__swap(),
+            'Resolution': self.__resolution(),
+            'Uptime': self.__uptime(),
+            'Shell': self.__shell(),
+            'DE': self.__desktop_environment(),
+            'WM': self.__window_manager(),
+            'Display server': self.__display_server(),
+            'Packages': self.__packages(),
+            'Font': self.__font(),
+            'Default browser': self.__browser(),
+        }
+
+    def get_distro_info(self) -> dict:
+        """Doc"""
+        return self.__distro_fetch_dict
+
+    def __header(self) -> str:
+        """Get header
+
+        username@hostname
+        """
+        return (
+                self.__os_info.get_username()
+                + '@' + self.__os_info.get_hostname())
+
+    def __os_name(self) -> str:
+        """Doc"""
+        os_pretty_name_ = self.__os_info.get_pretty_name()
+        name = (
+            os_pretty_name_
+            if os_pretty_name_
+            else self.__os_info.get_name() + '' + self.__os_info.get_version())
+        os_name = name + ' ' + self.__os_info.get_codename()
+
+        if not os_name and not os_pretty_name_:
+            return 'unknown'
+
+        return os_name
+
+    def __architecture(self) -> str:
+        """Doc"""
+        architecture = self.__os_info.get_architecture()
+        return architecture + ' bits' if architecture else 'unknown'
+
+    def __kernel(self) -> str:
+        """Doc"""
+        kernel = self.__os_info.get_kernel()
+        return (
+            kernel + ' ' + self.__os_info.get_kernel_version()
+            if kernel else 'unknown')
+
+    def __motherboard(self) -> str:
+        """Doc"""
+        motherboard = self.__os_info.get_motherboard()
+        motherboard_version = self.__os_info.get_motherboard_version()
+
+        if motherboard and motherboard_version:
+            return '{} - {}'.format(motherboard, motherboard_version)
+
+        elif motherboard and not motherboard_version:
+            return motherboard
+
+        else:
+            return 'unknown'
+
+    def __cpu(self) -> str:
+        """Doc"""
+        cpu = self.__os_info.get_cpu()
+        return cpu if cpu else 'unknown'
+
+    def __gpu(self) -> str:
+        """Doc"""
+        gpu = self.__os_info.get_gpu()
+        return gpu if gpu else 'unknown'
+
+    def __ram(self) -> str:
+        """Doc"""
+        ram = self.__os_info.get_ram()
+        used = self.__os_info.get_ram_used()
+        free = self.__os_info.get_ram_free()
+        return (
+            '{}, {} used, {} free'.format(ram, used, free)
+            if ram else 'unknown')
+
+    def __swap(self) -> str:
+        """Doc"""
+        swap = self.__os_info.get_swap()
+        used = self.__os_info.get_swap_used()
+        free = self.__os_info.get_swap_free()
+        return (
+            '{}, {} used, {} free'.format(swap, used, free)
+            if swap else 'unknown')
+
+    def __resolution(self) -> str:
+        """Doc"""
+        resolution = self.__os_info.get_screen_resolution()
+        return resolution if resolution else 'unknown'
+
+    def __uptime(self) -> str:
+        """Doc"""
+        uptime = self.__os_info.get_uptime()
+        return uptime if uptime else 'unknown'
+
+    def __shell(self) -> str:
+        """Doc"""
+        shell = self.__os_info.get_shell()
+
+        if 'bash' in shell.lower():
+            shell = 'Bash'
+        return shell if shell else 'unknown'
+
+    def __desktop_environment(self) -> str:
+        """Doc"""
+        __de = self.__os_info.get_desktop_environment()
+        __de_version = self.__os_info.get_desktop_environment_version()
+
+        de = __de if __de else ''
+        de_version = __de_version if __de_version else ''
+
+        if de_version:
+            de = de + ' ' + de_version
+        return de if de else 'unknown'
+
+    def __window_manager(self) -> str:
+        """Doc"""
+        wm = self.__os_info.get_window_manager()
+        return wm if wm else 'unknown'
+
+    def __display_server(self):
+        """Doc"""
+        ds = self.__os_info.get_display_server()
+        return ds if ds else 'unknown'
+
+    def __packages_bkp(self) -> str:
+        """Doc"""
+        native_packages = self.__os_info.get_packages()
+        native_packages_manager_name = self.__os_info.get_package_manager()
+        flatpak_packages = self.__os_info.get_flatpak_packages()
+        snap_packages = self.__os_info.get_snap_packages()
+
+        if flatpak_packages or snap_packages:
+            # Format
+            native_packages_format = '{}={}'.format(
+                native_packages_manager_name, native_packages)
+
+            flatpak_packages_format = ', flatpak={}'.format(
+                flatpak_packages) if flatpak_packages else ''
+
+            snap_packages_format = ', snap={}'.format(
+                snap_packages) if snap_packages else ''
+
+            # Total
+            total_flatpak = flatpak_packages if flatpak_packages else 0
+            total_snap = snap_packages if snap_packages else 0
+            total_packages = (str(
+                int(native_packages) + int(total_flatpak) + int(total_snap)))
+
+            # Details
+            packages_details = (
+                ' ({}{}{})'.format(
+                    native_packages_format,
+                    flatpak_packages_format,
+                    snap_packages_format))
+
+        else:
+            total_packages = native_packages
+            packages_details = ' - ' + native_packages_manager_name
+
+        if not native_packages:
+            return 'unknown'
+
+        return total_packages + packages_details
+
+    def __packages(self) -> str:
+        """Doc"""
+
+        # Native
+        str_num_native_packages = self.__os_info.get_packages()
+        native_packages_name = self.__os_info.get_package_manager()
+
+        # Total packages
+        total_packages = str_num_native_packages
+
+        # Return var
+        packages = '{} {}'.format(total_packages, native_packages_name)
+
+        # If Flatpak or snap
+        str_num_flatpak_packages = self.__os_info.get_flatpak_packages()
+        str_num_snap_packages = self.__os_info.get_snap_packages()
+
+        if str_num_flatpak_packages or str_num_snap_packages:
+            # Only Flatpak
+            if str_num_flatpak_packages and not str_num_snap_packages:
+                total_packages = (str(
+                    int(str_num_flatpak_packages)
+                    + int(str_num_native_packages)))
+
+                packages = '{} {}={}, flatpak={}'.format(
+                    total_packages, native_packages_name,
+                    str_num_native_packages, str_num_flatpak_packages)
+
+            # Only Snap
+            elif not str_num_flatpak_packages and str_num_snap_packages:
+                total_packages = (str(
+                    int(str_num_snap_packages) + int(str_num_native_packages)))
+
+                packages = '{} {}={}, snap={}'.format(
+                    total_packages, native_packages_name,
+                    str_num_native_packages, str_num_snap_packages)
+
+            # Flatpak and Snap
+            else:
+                total_packages = str(
+                    int(str_num_flatpak_packages)
+                    + int(str_num_snap_packages)
+                    + int(str_num_native_packages))
+
+                packages = '{} {}={}, flatpak={}, snap={}'.format(
+                    total_packages, native_packages_name,
+                    str_num_native_packages, str_num_flatpak_packages,
+                    str_num_snap_packages)
+
+        return packages
+
+    def __font(self) -> str:
+        """Doc"""
+        font = self.__os_info.get_font()
+        return font if font else 'unknown'
+
+    def __browser(self) -> str:
+        """Doc"""
+        browser = self.__os_info.get_browser()
+        return browser if browser else 'unknown'
+
+
+if __name__ == '__main__':
+    print('System info:')
+    linux_info = SystemInfo()
+    print('                  user-name:', linux_info.get_user_name())
+    print('                   username:', linux_info.get_username())
+    print('                   hostname:', linux_info.get_hostname())
+    print('                pretty-name:', linux_info.get_pretty_name())
+    print('                       name:', linux_info.get_name())
+    print('                    name-id:', linux_info.get_name_id())
+    print('                   codename:', linux_info.get_codename())
+    print('                    version:', linux_info.get_version())
+    print('                     kernel:', linux_info.get_kernel())
+    print('             kernel-version:', linux_info.get_kernel_version())
+    print('               architecture:', linux_info.get_architecture())
+    print('                motherboard:', linux_info.get_motherboard())
+    print('        motherboard-version:', linux_info.get_motherboard_version())
+    print('                        cpu:', linux_info.get_cpu())
+    print('                        gpu:', linux_info.get_gpu())
+    print('                        ram:', linux_info.get_ram())
+    print('                   ram-used:', linux_info.get_ram_used())
+    print('                   ram-free:', linux_info.get_ram_free())
+    print('                       swap:', linux_info.get_swap())
+    print('                  swap-used:', linux_info.get_swap_used())
+    print('                  swap-free:', linux_info.get_swap_free())
+    print('          screen-resolution:', linux_info.get_screen_resolution())
+    print('                     uptime:', linux_info.get_uptime())
+    print('                      shell:', linux_info.get_shell())
+    print('        desktop-environment:', linux_info.get_desktop_environment())
+    print('desktop-environment-version:',
+          linux_info.get_desktop_environment_version())
+    print('             window-manager:', linux_info.get_window_manager())
+    print('             display-server:', linux_info.get_display_server())
+    print('            package-manager:', linux_info.get_package_manager())
+    print('                   packages:', linux_info.get_packages())
+    print('           flatpak-packages:', linux_info.get_flatpak_packages())
+    print('              snap-packages:', linux_info.get_snap_packages())
+    print('                       font:', linux_info.get_font())
+    print('                    browser:', linux_info.get_browser())
+
+    print()
+    print('OS release:')
+    release = linux_info.get_all_release_info()
+    for release_key, release_value in release.items():
+        print(release_key, '->', release_value)
+
+    print()
+    print('Resume system info:')
+    df = ResumeSystemInfo()
+    for k, v in df.get_distro_info().items():
+        print(k, '->', v)
