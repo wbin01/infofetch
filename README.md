@@ -1,0 +1,2 @@
+# infofetch
+OS information fetch
