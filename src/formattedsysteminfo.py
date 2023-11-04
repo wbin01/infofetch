@@ -22,7 +22,7 @@ class FormattedSystemInfo(object):
                 'OS': self.__format_os_name(),
                 'Kernel': self.__format_kernel(),
                 'User': self.__format_user(),
-                'Hostname': self.__sys_info.get_hostname(),
+                'Hostname': self.__sys_info.hostname,
                 'DE': self.__format_desktop_environment(),
                 'WM': self.__format_window_manager(),
                 'Display server': self.__format_display_server(),
@@ -42,8 +42,8 @@ class FormattedSystemInfo(object):
 
     def __format_user(self) -> str | None:
         # ...
-        user = self.__sys_info.get_username()
-        username = self.__sys_info.get_user_name()
+        user = self.__sys_info.username
+        username = self.__sys_info.user_name
         if user and username:
             return f'{user} [{username}]'
         if user:
@@ -52,11 +52,11 @@ class FormattedSystemInfo(object):
 
     def __format_os_name(self) -> str | None:
         # ...
-        os_pretty_name_ = self.__sys_info.get_pretty_name()
+        os_pretty_name_ = self.__sys_info.pretty_name
         name = (
             os_pretty_name_ if os_pretty_name_ else
-            self.__sys_info.get_name() + '' + self.__sys_info.get_version())
-        os_name = name + ' ' + self.__sys_info.get_codename()
+            self.__sys_info.name + '' + self.__sys_info.get_version())
+        os_name = name + ' ' + self.__sys_info.codename
 
         if not os_name and not os_pretty_name_:
             return None

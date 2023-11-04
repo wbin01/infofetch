@@ -21,7 +21,7 @@ class SystemInfo(object):
         self.__user_name = None
         self.__username = None
         self.__hostname = None
-        self.__all_release_info = None
+        self.__os_release = self.os_release
         self.__pretty_name = None
         self.__name = None
         self.__name_id = None
@@ -57,7 +57,8 @@ class SystemInfo(object):
         self.__gtk_style = None
         self.__gtk_icons = None
 
-    def get_user_name(self) -> str:
+    @property
+    def user_name(self) -> str | None:
         """The name of the user
 
         The correct name that the user registered, not the 'username'.
@@ -67,12 +68,14 @@ class SystemInfo(object):
         if self.__user_name:
             return self.__user_name
 
-        self.__user_name = subprocess.getoutput(
+        user_name = subprocess.getoutput(
             "cat /etc/passwd | grep `echo $HOME` | awk -F ':' '{print $5}'")
+        self.__user_name = user_name if user_name else None
 
         return self.__user_name
 
-    def get_username(self) -> str:
+    @property
+    def username(self) -> str | None:
         """The username
 
         The username used to log in, not the correct or correctly
@@ -83,11 +86,13 @@ class SystemInfo(object):
         if self.__username:
             return self.__username
 
-        self.__username = os.environ['USER']
+        username = os.environ['USER']
+        self.__username = username if username else None
 
         return self.__username
 
-    def get_hostname(self) -> str:
+    @property
+    def hostname(self) -> str | None:
         """The host name
 
         The recognition name on the network.
@@ -104,24 +109,21 @@ class SystemInfo(object):
             hostname = subprocess.getoutput('echo $HOSTNAME')
 
         # Fix $HOSTNAME in Fedora
-        if 'fedora' in self.get_name().lower():
+        if 'fedora' in self.name.lower():
             hostname = subprocess.getoutput('printf "${HOSTNAME%%.*}"')
 
-        self.__hostname = hostname
+        self.__hostname = hostname if hostname else None
         return self.__hostname
 
-    def get_all_release_info(self) -> dict:
+    @property
+    def os_release(self) -> dict:
         """cat /etc/os-release
 
         All information from the '/etc/os-release' file in a dictionary.
 
         :return: Dict containing information from the '/etc/os-release' file
         """
-        if self.__all_release_info:
-            return self.__all_release_info
-
-        # Return var
-        all_release_info = dict()
+        all_release_info = {}
 
         cat_release = subprocess.getoutput('cat /etc/os-release').split('\n')
         for item_release in cat_release:
@@ -162,10 +164,11 @@ class SystemInfo(object):
                 all_release_info['PRETTY_NAME'] = all_release_info[
                     'PRETTY_NAME'].replace('Ubuntu', name)
 
-        self.__all_release_info = all_release_info
-        return self.__all_release_info
+        self.__os_release = all_release_info
+        return self.__os_release
 
-    def get_pretty_name(self) -> str:
+    @property
+    def pretty_name(self) -> str | None:
         """Verbally formatted name
 
         The pretty name in the '/etc/os-release' file.
@@ -175,15 +178,13 @@ class SystemInfo(object):
         if self.__pretty_name:
             return self.__pretty_name
 
-        if not self.__all_release_info:
-            self.get_all_release_info()
-
-        if 'PRETTY_NAME' in self.__all_release_info:
-            self.__pretty_name = self.__all_release_info['PRETTY_NAME']
+        self.__pretty_name = (self.__os_release['PRETTY_NAME']
+                              if 'PRETTY_NAME' in self.__os_release else None)
 
         return self.__pretty_name
 
-    def get_name(self) -> str:
+    @property
+    def name(self) -> str | None:
         """Operating system name
 
         The commercially formatted name, which can contain uppercase letters
@@ -194,14 +195,12 @@ class SystemInfo(object):
         if self.__name:
             return self.__name
 
-        if not self.__all_release_info:
-            self.get_all_release_info()
-
-        if 'NAME' in self.__all_release_info:
-            self.__name = self.__all_release_info['NAME']
+        self.__name = (self.__os_release['NAME']
+                       if 'NAME' in self.__os_release else None)
         return self.__name
 
-    def get_name_id(self) -> str:
+    @property
+    def name_id(self) -> str | None:
         """Operating system identity
 
         The identifier formatted name for code or database; usually in
@@ -212,17 +211,17 @@ class SystemInfo(object):
         if self.__name_id:
             return self.__name_id
 
-        if not self.__all_release_info:
-            self.get_all_release_info()
+        name_id = ''
+        if 'ID' in self.__os_release:
+            name_id = self.__os_release['ID']
+        elif 'NAME' in self.__os_release:
+            name_id = self.__os_release['NAME'].lower()
 
-        if 'ID' in self.__all_release_info:
-            self.__name_id = self.__all_release_info['ID']
-        elif 'NAME' in self.__all_release_info:
-            self.__name_id = self.__all_release_info['NAME'].lower()
-
+        self.__name_id = name_id if name_id else None
         return self.__name_id
 
-    def get_codename(self) -> str:
+    @property
+    def codename(self) -> str | None:
         """Operating system codename
 
         The code name is the commercial one, to easily identify the versions 
@@ -234,13 +233,12 @@ class SystemInfo(object):
         if self.__codename:
             return self.__codename
 
-        if not self.__all_release_info:
-            self.get_all_release_info()
-
-        if 'VERSION_CODENAME' in self.__all_release_info:
-            self.__codename = self.__all_release_info['VERSION_CODENAME']
-        elif 'CODENAME' in self.__all_release_info:
-            self.__codename = self.__all_release_info['CODENAME']
+        codename = ''
+        if 'VERSION_CODENAME' in self.__os_release:
+            codename = self.__os_release['VERSION_CODENAME']
+        elif 'CODENAME' in self.__os_release:
+            codename = self.__os_release['CODENAME']
+        self.__codename = codename if codename else None
 
         return self.__codename
 
@@ -254,13 +252,10 @@ class SystemInfo(object):
         if self.__version:
             return self.__version
 
-        if not self.__all_release_info:
-            self.get_all_release_info()
-
-        if 'VERSION_ID' in self.__all_release_info:
-            self.__version = self.__all_release_info['VERSION_ID']
-        elif 'VERSION' in self.__all_release_info:
-            self.__version = self.__all_release_info['VERSION']
+        if 'VERSION_ID' in self.__os_release:
+            self.__version = self.__os_release['VERSION_ID']
+        elif 'VERSION' in self.__os_release:
+            self.__version = self.__os_release['VERSION']
 
         return self.__version
 
@@ -731,13 +726,13 @@ class SystemInfo(object):
 if __name__ == '__main__':
     print('System info:')
     linux_info = SystemInfo()
-    print('                  user-name:', linux_info.get_user_name())
-    print('                   username:', linux_info.get_username())
-    print('                   hostname:', linux_info.get_hostname())
-    print('                pretty-name:', linux_info.get_pretty_name())
-    print('                       name:', linux_info.get_name())
-    print('                    name-id:', linux_info.get_name_id())
-    print('                   codename:', linux_info.get_codename())
+    print('                  user-name:', linux_info.user_name)
+    print('                   username:', linux_info.username)
+    print('                   hostname:', linux_info.hostname)
+    print('                pretty-name:', linux_info.pretty_name)
+    print('                       name:', linux_info.name)
+    print('                    name-id:', linux_info.name_id)
+    print('                   codename:', linux_info.codename)
     print('                    version:', linux_info.get_version())
     print('                     kernel:', linux_info.get_kernel())
     print('             kernel-version:', linux_info.get_kernel_version())
@@ -768,6 +763,6 @@ if __name__ == '__main__':
 
     print()
     print('OS release:')
-    release = linux_info.get_all_release_info()
+    release = linux_info.os_release
     for release_key, release_value in release.items():
         print(release_key, '->', release_value)

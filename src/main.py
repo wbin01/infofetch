@@ -28,9 +28,7 @@ class SystemInfo(object):
     def __get_system_logo(self) -> ansicolorimage:
         # ...
         sysinfo = systeminfo.SystemInfo()
-        img = os.path.join(
-            '/usr/share/pixmaps',
-            f'{sysinfo.get_name_id()}.png')
+        img = os.path.join('/usr/share/pixmaps', f'{sysinfo.name_id}.png')
         if not os.path.isfile(img):
             img = os.path.join(self.__base_dir, 'resources', 'linux.png')
 
