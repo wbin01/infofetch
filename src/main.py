@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 import os
+import subprocess
 
 import ansicolorimage
 import systeminfo
 import formattedsysteminfo
 
-
-# sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-# /usr/share/pixmaps/neon.png
 
 class SystemInfo(object):
     """..."""
@@ -43,9 +41,21 @@ class SystemInfo(object):
         # ...
         info = ''
 
+        _cmd = subprocess.Popen(
+            ['tput', 'cols'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        tput_cols, _stderr = _cmd.communicate()
+
         system_info_items = formattedsysteminfo.FormattedSystemInfo()
+
         for key, value in system_info_items.system_fetch_as_dict.items():
-            if key != 'id':
+            value_width = int(tput_cols) - len(key) - self.__os_logo.width - 3
+
+            if len(value) > value_width:
+                info += "\x1b[38;2;{}m{}\x1B[0m: {}\n".format(
+                    self.__os_logo.image_accent_color,
+                    key,
+                    value[:value_width - 3] + '...')
+            else:
                 info += "\x1b[38;2;{}m{}\x1B[0m: {}\n".format(
                     self.__os_logo.image_accent_color, key, value)
 

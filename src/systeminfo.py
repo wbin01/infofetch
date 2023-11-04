@@ -3,6 +3,8 @@ import os
 import re
 import subprocess
 
+import desktopentryparse
+
 
 class SystemInfo(object):
     """Create an object of type 'LinuxInfo'
@@ -50,8 +52,7 @@ class SystemInfo(object):
         self.__packages = None
         self.__flatpak_packages = None
         self.__snap_packages = None
-        self.__font = None
-        self.__browser = None
+        self.__kde_style = None
 
     def get_user_name(self) -> str:
         """The name of the user
@@ -309,10 +310,7 @@ class SystemInfo(object):
         return self.__motherboard
 
     def get_motherboard_version(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__motherboard_version:
             return self.__motherboard_version
 
@@ -338,10 +336,7 @@ class SystemInfo(object):
         return self.__cpu_architecture
 
     def get_gpu(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__gpu:
             return self.__gpu
 
@@ -399,10 +394,7 @@ class SystemInfo(object):
         return self.__gpu
 
     def get_ram(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__ram:
             return self.__ram
         # Somente um método pega todas as informações das memórias
@@ -439,10 +431,7 @@ class SystemInfo(object):
         return self.__ram
 
     def get_ram_used(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__ram_used:
             return self.__ram_used
 
@@ -450,10 +439,7 @@ class SystemInfo(object):
         return self.__ram_used
 
     def get_ram_free(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__ram_free:
             return self.__ram_free
 
@@ -461,10 +447,7 @@ class SystemInfo(object):
         return self.__ram_free
 
     def get_swap(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__swap:
             return self.__swap
 
@@ -472,10 +455,7 @@ class SystemInfo(object):
         return self.__swap
 
     def get_swap_used(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__swap_used:
             return self.__swap_used
 
@@ -483,10 +463,7 @@ class SystemInfo(object):
         return self.__swap_used
 
     def get_swap_free(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__swap_free:
             return self.__swap_free
 
@@ -494,10 +471,7 @@ class SystemInfo(object):
         return self.__swap_free
 
     def get_screen_resolution(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__screen_resolution:
             return self.__screen_resolution
 
@@ -510,10 +484,7 @@ class SystemInfo(object):
         return self.__screen_resolution
 
     def get_uptime(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__uptime:
             return self.__uptime
 
@@ -527,10 +498,7 @@ class SystemInfo(object):
         return self.__uptime
 
     def get_shell(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__shell:
             return self.__shell
 
@@ -538,10 +506,7 @@ class SystemInfo(object):
         return self.__shell
 
     def get_desktop_environment(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__desktop_environment:
             return self.__desktop_environment
 
@@ -561,10 +526,7 @@ class SystemInfo(object):
         return self.__desktop_environment
 
     def get_desktop_environment_version(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__desktop_environment_version:
             return self.__desktop_environment_version
 
@@ -603,10 +565,7 @@ class SystemInfo(object):
         return self.__desktop_environment_version
 
     def get_window_manager(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__window_manager:
             return self.__window_manager
 
@@ -640,10 +599,7 @@ class SystemInfo(object):
         return self.__window_manager
 
     def get_display_server(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__display_server:
             return self.__display_server
 
@@ -656,10 +612,7 @@ class SystemInfo(object):
         return self.__display_server
 
     def get_package_manager(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__package_manager:
             return self.__package_manager
 
@@ -680,10 +633,7 @@ class SystemInfo(object):
         return self.__package_manager
 
     def get_packages(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__packages:
             return self.__packages
 
@@ -692,10 +642,7 @@ class SystemInfo(object):
         return self.__packages
 
     def get_flatpak_packages(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__flatpak_packages:
             return self.__flatpak_packages
 
@@ -706,10 +653,7 @@ class SystemInfo(object):
         return self.__flatpak_packages
 
     def get_snap_packages(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__snap_packages:
             return self.__snap_packages
 
@@ -723,6 +667,22 @@ class SystemInfo(object):
             self.__snap_packages = str(number)
 
         return self.__snap_packages
+
+    @property
+    def kde_style(self) -> str | None:
+        """..."""
+        if self.__kde_style:
+            return self.__kde_style
+
+        kdeglobals = os.path.join(os.environ['HOME'], '.config', 'kdeglobals')
+        if os.path.isfile(kdeglobals):
+            kdeglobals_file = desktopentryparse.DesktopFile(kdeglobals)
+            if ('[KDE]' in kdeglobals_file.content and
+                    'widgetStyle' in kdeglobals_file.content['[KDE]']):
+                self.__kde_style = kdeglobals_file.content['[KDE]'][
+                    'widgetStyle']
+
+        return self.__kde_style
 
 
 if __name__ == '__main__':
@@ -761,6 +721,7 @@ if __name__ == '__main__':
     print('                   packages:', linux_info.get_packages())
     print('           flatpak-packages:', linux_info.get_flatpak_packages())
     print('              snap-packages:', linux_info.get_snap_packages())
+    print('                  kde-style:', linux_info.kde_style)
 
     print()
     print('OS release:')

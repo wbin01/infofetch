@@ -19,7 +19,6 @@ class FormattedSystemInfo(object):
         """..."""
         if not self.__system_fetch_as_dict:
             self.__system_fetch_as_dict = {
-                'id': self.__sys_info.get_name_id(),
                 'OS': self.__format_os_name(),
                 'Kernel': self.__format_kernel(),
                 'User': self.__format_user(),
@@ -27,6 +26,7 @@ class FormattedSystemInfo(object):
                 'DE': self.__format_desktop_environment(),
                 'WM': self.__format_window_manager(),
                 'Display server': self.__format_display_server(),
+                'Style theme': self.__format_style_theme(),
                 'Packages': self.__format_packages(),
                 'Shell': self.__format_shell(),
                 'Uptime': self.__format_uptime(),
@@ -94,7 +94,7 @@ class FormattedSystemInfo(object):
         architecture = self.__sys_info.get_cpu_architecture()
 
         if cpu and architecture:
-            cpu = f'{cpu} [{architecture} bits]'
+            cpu = f'{cpu} [{architecture}]'
 
         return cpu if cpu else None
 
@@ -160,6 +160,16 @@ class FormattedSystemInfo(object):
         # ...
         ds = self.__sys_info.get_display_server()
         return ds if ds else None
+
+    def __format_style_theme(self) -> str | None:
+        # ...
+        style = ''
+
+        qt_style = self.__sys_info.kde_style
+        if qt_style:
+            style += f'Qt={qt_style}'
+
+        return style
 
     def __format_packages(self) -> str:
         # ...
