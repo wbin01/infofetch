@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-import os
-import re
-import subprocess
-
 import systeminfo
 
 
@@ -24,31 +20,34 @@ class FormattedSystemInfo(object):
         if not self.__system_fetch_as_dict:
             self.__system_fetch_as_dict = {
                 'id': self.__sys_info.get_name_id(),
-                'Header': self.__format_header(),
                 'OS': self.__format_os_name(),
                 'Kernel': self.__format_kernel(),
+                'User': self.__format_user(),
+                'Hostname': self.__sys_info.get_hostname(),
+                'DE': self.__format_desktop_environment(),
+                'WM': self.__format_window_manager(),
+                'Display server': self.__format_display_server(),
+                'Packages': self.__format_packages(),
+                'Shell': self.__format_shell(),
+                'Uptime': self.__format_uptime(),
                 'Board': self.__format_motherboard(),
                 'CPU': self.__format_cpu(),
                 'GPU': self.__format_gpu(),
                 'RAM': self.__format_ram(),
                 'Swap': self.__format_swap(),
-                'Resolution': self.__format_resolution(),
-                'Uptime': self.__format_uptime(),
-                'Shell': self.__format_shell(),
-                'DE': self.__format_desktop_environment(),
-                'WM': self.__format_window_manager(),
-                'Display server': self.__format_display_server(),
-                'Packages': self.__format_packages()}
+                'Resolution': self.__format_resolution()}
 
         return self.__system_fetch_as_dict
 
-    def __format_header(self) -> str:
-        """Get header
-
-        Ex: username@hostname
-        """
-        return '{}@{}'.format(
-            self.__sys_info.get_username(), self.__sys_info.get_hostname())
+    def __format_user(self) -> str | None:
+        # ...
+        user = self.__sys_info.get_username()
+        username = self.__sys_info.get_user_name()
+        if user and username:
+            return f'{user} [{username}]'
+        if user:
+            return f'{user}'
+        return None
 
     def __format_os_name(self) -> str | None:
         # ...
