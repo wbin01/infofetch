@@ -27,10 +27,11 @@ class SystemInfo(object):
         self.__version = None
         self.__kernel = None
         self.__kernel_version = None
-        self.__architecture = None
+        self.__kernel_architecture = None
         self.__motherboard = None
         self.__motherboard_version = None
         self.__cpu = None
+        self.__cpu_architecture = None
         self.__gpu = None
         self.__ram = None
         self.__ram_used = None
@@ -289,22 +290,17 @@ class SystemInfo(object):
 
         return self.__kernel_version
 
-    def get_architecture(self) -> str:
-        """
+    def get_kernel_architecture(self) -> str:
+        """..."""
+        if self.__kernel_architecture:
+            return self.__kernel_architecture
 
-        :return:
-        """
-        if self.__architecture:
-            return self.__architecture
-
-        self.__architecture = subprocess.getoutput('getconf LONG_BIT').title()
-        return self.__architecture
+        self.__kernel_architecture = subprocess.getoutput(
+            'getconf LONG_BIT').title()
+        return self.__kernel_architecture
 
     def get_motherboard(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__motherboard:
             return self.__motherboard
 
@@ -325,16 +321,21 @@ class SystemInfo(object):
         return self.__motherboard_version
 
     def get_cpu(self) -> str:
-        """
-
-        :return:
-        """
+        """..."""
         if self.__cpu:
             return self.__cpu
         cmd = ("cat /proc/cpuinfo | grep 'model name' | "
                "sed -n 1p | sed 's/.*:.//g;s/(\w*)//g'")
         self.__cpu = subprocess.getoutput(cmd)
         return self.__cpu
+
+    def get_cpu_architecture(self) -> str:
+        """..."""
+        if self.__cpu_architecture:
+            return self.__cpu_architecture
+        cmd = "lscpu | grep Architecture | awk '{print $2}'"
+        self.__cpu_architecture = subprocess.getoutput(cmd)
+        return self.__cpu_architecture
 
     def get_gpu(self) -> str:
         """
@@ -723,304 +724,6 @@ class SystemInfo(object):
 
         return self.__snap_packages
 
-    def get_font(self) -> str:
-        """
-
-        :return:
-        """
-        if self.__font:
-            return self.__font
-
-        self.__font = re.findall(r':.(.+)', subprocess.getoutput(
-            'fc-match'))[0].replace('"', '')
-        return self.__font
-
-    def get_browser(self) -> str:
-        """
-
-        :return:
-        """
-        if self.__browser:
-            return self.__browser
-
-        desktop_file = subprocess.getoutput(
-            'xdg-settings get default-web-browser').lower()
-        browser = desktop_file.replace('.desktop', '').replace('-', ' ')
-        bad_list = [
-            '/bin/sh:', 'xdg-settings:', 'leafpad',
-            'kwrite', 'gedit', 'kate', 'debian', 'sensible']
-        for bad_item in bad_list:
-            if bad_item in browser:
-                browser = ''
-
-        if '.' in browser:
-            regex_browser = re.findall(r'\.(\w+$)', browser)
-            if regex_browser:
-                browser = regex_browser[0]
-
-        browser = '' if browser == ' ' else browser
-        self.__browser = browser.title()
-
-        return self.__browser
-
-
-class ResumeSystemInfo(object):
-    """Create an object of type 'InfoFetch'
-
-    It gives access to various information about the
-    operating system, such as architecture, memory, cpu...
-    """
-
-    def __init__(self):
-
-        # Info lib
-        self.__os_info = SystemInfo()
-
-        # System
-        self.__distro_fetch_dict = {
-            'id': self.__os_info.get_name_id(),
-            'Header': self.__header(),
-            'OS': self.__os_name(),
-            'Architecture': self.__architecture(),
-            'Kernel': self.__kernel(),
-            'Board': self.__motherboard(),
-            'CPU': self.__cpu(),
-            'GPU': self.__gpu(),
-            'RAM': self.__ram(),
-            'Swap': self.__swap(),
-            'Resolution': self.__resolution(),
-            'Uptime': self.__uptime(),
-            'Shell': self.__shell(),
-            'DE': self.__desktop_environment(),
-            'WM': self.__window_manager(),
-            'Display server': self.__display_server(),
-            'Packages': self.__packages(),
-            'Font': self.__font(),
-            'Default browser': self.__browser(),
-        }
-
-    def get_distro_info(self) -> dict:
-        """Doc"""
-        return self.__distro_fetch_dict
-
-    def __header(self) -> str:
-        """Get header
-
-        username@hostname
-        """
-        return (
-                self.__os_info.get_username()
-                + '@' + self.__os_info.get_hostname())
-
-    def __os_name(self) -> str:
-        """Doc"""
-        os_pretty_name_ = self.__os_info.get_pretty_name()
-        name = (
-            os_pretty_name_
-            if os_pretty_name_
-            else self.__os_info.get_name() + '' + self.__os_info.get_version())
-        os_name = name + ' ' + self.__os_info.get_codename()
-
-        if not os_name and not os_pretty_name_:
-            return 'unknown'
-
-        return os_name
-
-    def __architecture(self) -> str:
-        """Doc"""
-        architecture = self.__os_info.get_architecture()
-        return architecture + ' bits' if architecture else 'unknown'
-
-    def __kernel(self) -> str:
-        """Doc"""
-        kernel = self.__os_info.get_kernel()
-        return (
-            kernel + ' ' + self.__os_info.get_kernel_version()
-            if kernel else 'unknown')
-
-    def __motherboard(self) -> str:
-        """Doc"""
-        motherboard = self.__os_info.get_motherboard()
-        motherboard_version = self.__os_info.get_motherboard_version()
-
-        if motherboard and motherboard_version:
-            return '{} - {}'.format(motherboard, motherboard_version)
-
-        elif motherboard and not motherboard_version:
-            return motherboard
-
-        else:
-            return 'unknown'
-
-    def __cpu(self) -> str:
-        """Doc"""
-        cpu = self.__os_info.get_cpu()
-        return cpu if cpu else 'unknown'
-
-    def __gpu(self) -> str:
-        """Doc"""
-        gpu = self.__os_info.get_gpu()
-        return gpu if gpu else 'unknown'
-
-    def __ram(self) -> str:
-        """Doc"""
-        ram = self.__os_info.get_ram()
-        used = self.__os_info.get_ram_used()
-        free = self.__os_info.get_ram_free()
-        return (
-            '{}, {} used, {} free'.format(ram, used, free)
-            if ram else 'unknown')
-
-    def __swap(self) -> str:
-        """Doc"""
-        swap = self.__os_info.get_swap()
-        used = self.__os_info.get_swap_used()
-        free = self.__os_info.get_swap_free()
-        return (
-            '{}, {} used, {} free'.format(swap, used, free)
-            if swap else 'unknown')
-
-    def __resolution(self) -> str:
-        """Doc"""
-        resolution = self.__os_info.get_screen_resolution()
-        return resolution if resolution else 'unknown'
-
-    def __uptime(self) -> str:
-        """Doc"""
-        uptime = self.__os_info.get_uptime()
-        return uptime if uptime else 'unknown'
-
-    def __shell(self) -> str:
-        """Doc"""
-        shell = self.__os_info.get_shell()
-
-        if 'bash' in shell.lower():
-            shell = 'Bash'
-        return shell if shell else 'unknown'
-
-    def __desktop_environment(self) -> str:
-        """Doc"""
-        __de = self.__os_info.get_desktop_environment()
-        __de_version = self.__os_info.get_desktop_environment_version()
-
-        de = __de if __de else ''
-        de_version = __de_version if __de_version else ''
-
-        if de_version:
-            de = de + ' ' + de_version
-        return de if de else 'unknown'
-
-    def __window_manager(self) -> str:
-        """Doc"""
-        wm = self.__os_info.get_window_manager()
-        return wm if wm else 'unknown'
-
-    def __display_server(self):
-        """Doc"""
-        ds = self.__os_info.get_display_server()
-        return ds if ds else 'unknown'
-
-    def __packages_bkp(self) -> str:
-        """Doc"""
-        native_packages = self.__os_info.get_packages()
-        native_packages_manager_name = self.__os_info.get_package_manager()
-        flatpak_packages = self.__os_info.get_flatpak_packages()
-        snap_packages = self.__os_info.get_snap_packages()
-
-        if flatpak_packages or snap_packages:
-            # Format
-            native_packages_format = '{}={}'.format(
-                native_packages_manager_name, native_packages)
-
-            flatpak_packages_format = ', flatpak={}'.format(
-                flatpak_packages) if flatpak_packages else ''
-
-            snap_packages_format = ', snap={}'.format(
-                snap_packages) if snap_packages else ''
-
-            # Total
-            total_flatpak = flatpak_packages if flatpak_packages else 0
-            total_snap = snap_packages if snap_packages else 0
-            total_packages = (str(
-                int(native_packages) + int(total_flatpak) + int(total_snap)))
-
-            # Details
-            packages_details = (
-                ' ({}{}{})'.format(
-                    native_packages_format,
-                    flatpak_packages_format,
-                    snap_packages_format))
-
-        else:
-            total_packages = native_packages
-            packages_details = ' - ' + native_packages_manager_name
-
-        if not native_packages:
-            return 'unknown'
-
-        return total_packages + packages_details
-
-    def __packages(self) -> str:
-        """Doc"""
-
-        # Native
-        str_num_native_packages = self.__os_info.get_packages()
-        native_packages_name = self.__os_info.get_package_manager()
-
-        # Total packages
-        total_packages = str_num_native_packages
-
-        # Return var
-        packages = '{} {}'.format(total_packages, native_packages_name)
-
-        # If Flatpak or snap
-        str_num_flatpak_packages = self.__os_info.get_flatpak_packages()
-        str_num_snap_packages = self.__os_info.get_snap_packages()
-
-        if str_num_flatpak_packages or str_num_snap_packages:
-            # Only Flatpak
-            if str_num_flatpak_packages and not str_num_snap_packages:
-                total_packages = (str(
-                    int(str_num_flatpak_packages)
-                    + int(str_num_native_packages)))
-
-                packages = '{} {}={}, flatpak={}'.format(
-                    total_packages, native_packages_name,
-                    str_num_native_packages, str_num_flatpak_packages)
-
-            # Only Snap
-            elif not str_num_flatpak_packages and str_num_snap_packages:
-                total_packages = (str(
-                    int(str_num_snap_packages) + int(str_num_native_packages)))
-
-                packages = '{} {}={}, snap={}'.format(
-                    total_packages, native_packages_name,
-                    str_num_native_packages, str_num_snap_packages)
-
-            # Flatpak and Snap
-            else:
-                total_packages = str(
-                    int(str_num_flatpak_packages)
-                    + int(str_num_snap_packages)
-                    + int(str_num_native_packages))
-
-                packages = '{} {}={}, flatpak={}, snap={}'.format(
-                    total_packages, native_packages_name,
-                    str_num_native_packages, str_num_flatpak_packages,
-                    str_num_snap_packages)
-
-        return packages
-
-    def __font(self) -> str:
-        """Doc"""
-        font = self.__os_info.get_font()
-        return font if font else 'unknown'
-
-    def __browser(self) -> str:
-        """Doc"""
-        browser = self.__os_info.get_browser()
-        return browser if browser else 'unknown'
-
 
 if __name__ == '__main__':
     print('System info:')
@@ -1035,7 +738,7 @@ if __name__ == '__main__':
     print('                    version:', linux_info.get_version())
     print('                     kernel:', linux_info.get_kernel())
     print('             kernel-version:', linux_info.get_kernel_version())
-    print('               architecture:', linux_info.get_architecture())
+    print('        kernel-architecture:', linux_info.get_kernel_architecture())
     print('                motherboard:', linux_info.get_motherboard())
     print('        motherboard-version:', linux_info.get_motherboard_version())
     print('                        cpu:', linux_info.get_cpu())
@@ -1058,17 +761,9 @@ if __name__ == '__main__':
     print('                   packages:', linux_info.get_packages())
     print('           flatpak-packages:', linux_info.get_flatpak_packages())
     print('              snap-packages:', linux_info.get_snap_packages())
-    print('                       font:', linux_info.get_font())
-    print('                    browser:', linux_info.get_browser())
 
     print()
     print('OS release:')
     release = linux_info.get_all_release_info()
     for release_key, release_value in release.items():
         print(release_key, '->', release_value)
-
-    print()
-    print('Resume system info:')
-    df = ResumeSystemInfo()
-    for k, v in df.get_distro_info().items():
-        print(k, '->', v)

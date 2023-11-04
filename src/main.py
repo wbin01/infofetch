@@ -2,7 +2,7 @@
 import os
 
 import ansicolorimage
-import systeminfo
+import formattedsysteminfo
 
 
 # sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -36,14 +36,15 @@ class SystemInfo(object):
 
     @staticmethod
     def __get_system_info() -> list:
-        # test
-        text = ''
-        df = systeminfo.ResumeSystemInfo()
-        for k, v in df.get_distro_info().items():
-            text += f'\n{k}: {v}'
-        # text = ('10\n' * 10).split()
+        # ...
+        info = ''
 
-        return text.split('\n')
+        system_info_items = formattedsysteminfo.FormattedSystemInfo()
+        for key, value in system_info_items.system_fetch_as_dict.items():
+            if key != 'id':
+                info += f'{key}: {value}\n'
+
+        return info.split('\n')
 
     def __set_same_amount_of_lines_for_logo_and_info(self) -> None:
         # Same height
