@@ -53,6 +53,9 @@ class SystemInfo(object):
         self.__flatpak_packages = None
         self.__snap_packages = None
         self.__kde_style = None
+        self.__kde_icons = None
+        self.__gtk_style = None
+        self.__gtk_icons = None
 
     def get_user_name(self) -> str:
         """The name of the user
@@ -683,6 +686,46 @@ class SystemInfo(object):
                     'widgetStyle']
 
         return self.__kde_style
+
+    @property
+    def kde_icons(self) -> str | None:
+        """..."""
+        if self.__kde_icons:
+            return self.__kde_icons
+
+        kdeglobals = os.path.join(os.environ['HOME'], '.config', 'kdeglobals')
+        if os.path.isfile(kdeglobals):
+            kdeglobals_file = desktopentryparse.DesktopFile(kdeglobals)
+            if ('[Icons]' in kdeglobals_file.content and
+                    'Theme' in kdeglobals_file.content['[Icons]']):
+                self.__kde_icons = kdeglobals_file.content['[Icons]'][
+                    'Theme']
+
+        return self.__kde_icons
+
+    @property
+    def gtk_style(self) -> str | None:
+        """..."""
+        if self.__gtk_style:
+            return self.__gtk_style
+
+        gtk_style = subprocess.getoutput(
+            'gsettings get org.gnome.desktop.interface gtk-theme').strip("'")
+        self.__gtk_style = gtk_style if gtk_style else None
+
+        return self.__gtk_style
+
+    @property
+    def gtk_icons(self) -> str | None:
+        """..."""
+        if self.__gtk_icons:
+            return self.__gtk_icons
+
+        gtk_icons = subprocess.getoutput(
+            'gsettings get org.gnome.desktop.interface icon-theme').strip("'")
+        self.__gtk_icons = gtk_icons if gtk_icons else None
+
+        return self.__gtk_icons
 
 
 if __name__ == '__main__':

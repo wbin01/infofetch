@@ -27,6 +27,7 @@ class FormattedSystemInfo(object):
                 'WM': self.__format_window_manager(),
                 'Display server': self.__format_display_server(),
                 'Style theme': self.__format_style_theme(),
+                'Icons theme': self.__format_icons_theme(),
                 'Packages': self.__format_packages(),
                 'Shell': self.__format_shell(),
                 'Uptime': self.__format_uptime(),
@@ -163,13 +164,31 @@ class FormattedSystemInfo(object):
 
     def __format_style_theme(self) -> str | None:
         # ...
-        style = ''
+        style = []
 
         qt_style = self.__sys_info.kde_style
         if qt_style:
-            style += f'Qt={qt_style}'
+            style.append(f'Qt={qt_style}')
 
-        return style
+        gtk_style = self.__sys_info.gtk_style
+        if gtk_style:
+            style.append(f'Gtk={gtk_style}')
+
+        return ', '.join(style)
+
+    def __format_icons_theme(self) -> str | None:
+        # ...
+        icons = []
+
+        qt_icons = self.__sys_info.kde_icons
+        if qt_icons:
+            icons.append(f'Qt={qt_icons}')
+
+        gtk_icons = self.__sys_info.gtk_icons
+        if gtk_icons:
+            icons.append(f'Gtk={gtk_icons}')
+
+        return ', '.join(icons)
 
     def __format_packages(self) -> str:
         # ...
