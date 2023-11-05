@@ -35,7 +35,7 @@ class SystemInfo(object):
         self.__cpu = None
         self.__cpu_architecture = None
         self.__gpu = None
-        self.__ram = None
+        self.__ram = self.ram
         self.__ram_used = None
         self.__ram_free = None
         self.__swap = None
@@ -69,7 +69,8 @@ class SystemInfo(object):
             return self.__user_name
 
         user_name = subprocess.getoutput(
-            "cat /etc/passwd | grep `echo $HOME` | awk -F ':' '{print $5}'")
+            "cat /etc/passwd | grep `echo $HOME` | awk -F ':' '{print $5}'"
+        ).strip()
         self.__user_name = user_name if user_name else None
 
         return self.__user_name
@@ -86,7 +87,7 @@ class SystemInfo(object):
         if self.__username:
             return self.__username
 
-        username = os.environ['USER']
+        username = os.environ['USER'].strip()
         self.__username = username if username else None
 
         return self.__username
@@ -112,7 +113,7 @@ class SystemInfo(object):
         if 'fedora' in self.name.lower():
             hostname = subprocess.getoutput('printf "${HOSTNAME%%.*}"')
 
-        self.__hostname = hostname if hostname else None
+        self.__hostname = hostname.strip() if hostname.strip() else None
         return self.__hostname
 
     @property
@@ -217,7 +218,7 @@ class SystemInfo(object):
         elif 'NAME' in self.__os_release:
             name_id = self.__os_release['NAME'].lower()
 
-        self.__name_id = name_id if name_id else None
+        self.__name_id = name_id.strip() if name_id.strip() else None
         return self.__name_id
 
     @property
@@ -238,11 +239,12 @@ class SystemInfo(object):
             codename = self.__os_release['VERSION_CODENAME']
         elif 'CODENAME' in self.__os_release:
             codename = self.__os_release['CODENAME']
-        self.__codename = codename if codename else None
+        self.__codename = codename.strip() if codename.strip() else None
 
         return self.__codename
 
-    def get_version(self) -> str:
+    @property
+    def version(self) -> str | None:
         """Operating system version
 
         The current version of the operating system.
@@ -252,14 +254,17 @@ class SystemInfo(object):
         if self.__version:
             return self.__version
 
+        version = ''
         if 'VERSION_ID' in self.__os_release:
-            self.__version = self.__os_release['VERSION_ID']
+            version = self.__os_release['VERSION_ID']
         elif 'VERSION' in self.__os_release:
-            self.__version = self.__os_release['VERSION']
+            version = self.__os_release['VERSION']
+        self.__version = version.strip() if version.strip() else None
 
         return self.__version
 
-    def get_kernel(self) -> str:
+    @property
+    def kernel(self) -> str | None:
         """Operating system kernel name
 
         The current operating system kernel.
@@ -269,11 +274,14 @@ class SystemInfo(object):
         if self.__kernel:
             return self.__kernel
 
-        self.__kernel = subprocess.getoutput(
-            'cat /proc/sys/kernel/ostype').title()
+        kernel = subprocess.getoutput(
+            'cat /proc/sys/kernel/ostype').title().strip()
+        self.__kernel = kernel if kernel else None
+
         return self.__kernel
 
-    def get_kernel_version(self) -> str:
+    @property
+    def kernel_version(self) -> str | None:
         """Operating system kernel version
 
         The current kernel version of the operating system.
@@ -284,61 +292,79 @@ class SystemInfo(object):
             return self.__kernel_version
 
         regex = re.compile(r'(\.x\d.+|x\d.+)')
-        self.__kernel_version = regex.sub(
-            '', subprocess.getoutput('cat /proc/sys/kernel/osrelease'))
+        kernel_version = regex.sub(
+            '', subprocess.getoutput('cat /proc/sys/kernel/osrelease')).strip()
+        self.__kernel_version = kernel_version if kernel_version else None
 
         return self.__kernel_version
 
-    def get_kernel_architecture(self) -> str:
+    @property
+    def kernel_architecture(self) -> str | None:
         """..."""
         if self.__kernel_architecture:
             return self.__kernel_architecture
 
-        self.__kernel_architecture = subprocess.getoutput(
-            'getconf LONG_BIT').title()
+        architecture = subprocess.getoutput(
+            'getconf LONG_BIT').title().strip()
+        self.__kernel_architecture = architecture if architecture else None
         return self.__kernel_architecture
 
-    def get_motherboard(self) -> str:
+    @property
+    def motherboard(self) -> str | None:
         """..."""
         if self.__motherboard:
             return self.__motherboard
 
-        self.__motherboard = subprocess.getoutput(
-            'cat /sys/devices/virtual/dmi/id/product_name')
+        motherboard = subprocess.getoutput(
+            'cat /sys/devices/virtual/dmi/id/product_name').strip()
+        self.__motherboard = motherboard if motherboard else None
+
         return self.__motherboard
 
-    def get_motherboard_version(self) -> str:
+    @property
+    def motherboard_version(self) -> str | None:
         """..."""
         if self.__motherboard_version:
             return self.__motherboard_version
 
-        self.__motherboard_version = subprocess.getoutput(
-            'cat /sys/devices/virtual/dmi/id/product_version')
+        version = subprocess.getoutput(
+            'cat /sys/devices/virtual/dmi/id/product_version').strip()
+        self.__motherboard_version = version if version else None
+
         return self.__motherboard_version
 
-    def get_cpu(self) -> str:
+    @property
+    def cpu(self) -> str | None:
         """..."""
         if self.__cpu:
             return self.__cpu
-        cmd = ("cat /proc/cpuinfo | grep 'model name' | "
-               "sed -n 1p | sed 's/.*:.//g;s/(\w*)//g'")
-        self.__cpu = subprocess.getoutput(cmd)
+
+        cpu = subprocess.getoutput(
+            "cat /proc/cpuinfo | grep 'model name' | "
+            "sed -n 1p | sed 's/.*:.//g;s/(\w*)//g'").strip()
+        self.__cpu = cpu if cpu else None
+
         return self.__cpu
 
-    def get_cpu_architecture(self) -> str:
+    @property
+    def cpu_architecture(self) -> str | None:
         """..."""
         if self.__cpu_architecture:
             return self.__cpu_architecture
-        cmd = "lscpu | grep Architecture | awk '{print $2}'"
-        self.__cpu_architecture = subprocess.getoutput(cmd)
+
+        cpu = subprocess.getoutput(
+            "lscpu | grep Architecture | awk '{print $2}'").strip()
+        self.__cpu_architecture = cpu if cpu else None
+
         return self.__cpu_architecture
 
-    def get_gpu(self) -> str:
+    @property
+    def gpu(self) -> str | None:
         """..."""
         if self.__gpu:
             return self.__gpu
 
-        gpu = str()
+        gpu = ''
         found = False
 
         # 1° method ||| dica para achar os drivers: lspci -v
@@ -388,13 +414,14 @@ class SystemInfo(object):
         else:
             gpu = ''
 
-        self.__gpu = gpu.replace('  ', ' ')
+        gpu = gpu.replace('  ', ' ').strip()
+        self.__gpu = gpu if gpu else None
+
         return self.__gpu
 
-    def get_ram(self) -> str:
+    @property
+    def ram(self) -> str | None:
         """..."""
-        if self.__ram:
-            return self.__ram
         # Somente um método pega todas as informações das memórias
         # para evitar repetir o comando do 'shell'
 
@@ -406,66 +433,56 @@ class SystemInfo(object):
         swap_line = memory_info[2].split(' ')
 
         # Lista para armazenar as informações das memórias ram e swap
-        ram_info = list()
-        swap_info = list()
+        ram_info = []
+        swap_info = []
 
         # Preencher as listas com caracteres válidos, removendo vazios
         for ram in ram_line:
             if ram != '':
-                ram_info.append(ram)
+                ram_info.append(ram.strip())
         for swap in swap_line:
             if swap != '':
-                swap_info.append(swap)
+                swap_info.append(swap.strip())
 
         # Atribuir valores da memória ram
-        self.__ram = ram_info[1]
-        self.__ram_used = ram_info[2]
-        self.__ram_free = ram_info[3]
+        self.__ram = ram_info[1] if ram_info[1] else None
+        self.__ram_used = ram_info[2] if ram_info[2] else None
+        self.__ram_free = ram_info[3] if ram_info[3] else None
         # Atribuir valores da memória swap
-        self.__swap = swap_info[1]
-        self.__swap_used = swap_info[2]
-        self.__swap_free = swap_info[3]
+        self.__swap = swap_info[1] if swap_info[1] else None
+        self.__swap_used = swap_info[2] if swap_info[2] else None
+        self.__swap_free = swap_info[3] if swap_info[3] else None
 
         return self.__ram
 
-    def get_ram_used(self) -> str:
+    @property
+    def ram_used(self) -> str | None:
         """..."""
-        if self.__ram_used:
-            return self.__ram_used
-
-        self.get_ram()
+        # Already updated in self.ram
         return self.__ram_used
 
-    def get_ram_free(self) -> str:
+    @property
+    def ram_free(self) -> str | None:
         """..."""
-        if self.__ram_free:
-            return self.__ram_free
-
-        self.get_ram()
+        # Already updated in self.ram
         return self.__ram_free
 
-    def get_swap(self) -> str:
+    @property
+    def swap(self) -> str | None:
         """..."""
-        if self.__swap:
-            return self.__swap
-
-        self.get_ram()
+        # Already updated in self.ram
         return self.__swap
 
-    def get_swap_used(self) -> str:
+    @property
+    def swap_used(self) -> str | None:
         """..."""
-        if self.__swap_used:
-            return self.__swap_used
-
-        self.get_ram()
+        # Already updated in self.ram
         return self.__swap_used
 
-    def get_swap_free(self) -> str:
+    @property
+    def swap_free(self) -> str | None:
         """..."""
-        if self.__swap_free:
-            return self.__swap_free
-
-        self.get_ram()
+        # Already updated in self.ram
         return self.__swap_free
 
     def get_screen_resolution(self) -> str:
@@ -733,20 +750,21 @@ if __name__ == '__main__':
     print('                       name:', linux_info.name)
     print('                    name-id:', linux_info.name_id)
     print('                   codename:', linux_info.codename)
-    print('                    version:', linux_info.get_version())
-    print('                     kernel:', linux_info.get_kernel())
-    print('             kernel-version:', linux_info.get_kernel_version())
-    print('        kernel-architecture:', linux_info.get_kernel_architecture())
-    print('                motherboard:', linux_info.get_motherboard())
-    print('        motherboard-version:', linux_info.get_motherboard_version())
-    print('                        cpu:', linux_info.get_cpu())
-    print('                        gpu:', linux_info.get_gpu())
-    print('                        ram:', linux_info.get_ram())
-    print('                   ram-used:', linux_info.get_ram_used())
-    print('                   ram-free:', linux_info.get_ram_free())
-    print('                       swap:', linux_info.get_swap())
-    print('                  swap-used:', linux_info.get_swap_used())
-    print('                  swap-free:', linux_info.get_swap_free())
+    print('                    version:', linux_info.version)
+    print('                     kernel:', linux_info.kernel)
+    print('             kernel-version:', linux_info.kernel_version)
+    print('        kernel-architecture:', linux_info.kernel_architecture)
+    print('                motherboard:', linux_info.motherboard)
+    print('        motherboard-version:', linux_info.motherboard_version)
+    print('                        cpu:', linux_info.cpu)
+    print('           cpu-architecture:', linux_info.cpu_architecture)
+    print('                        gpu:', linux_info.gpu)
+    print('                        ram:', linux_info.ram)
+    print('                   ram-used:', linux_info.ram_used)
+    print('                   ram-free:', linux_info.ram_free)
+    print('                       swap:', linux_info.swap)
+    print('                  swap-used:', linux_info.swap_used)
+    print('                  swap-free:', linux_info.swap_free)
     print('          screen-resolution:', linux_info.get_screen_resolution())
     print('                     uptime:', linux_info.get_uptime())
     print('                      shell:', linux_info.get_shell())

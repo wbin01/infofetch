@@ -55,7 +55,7 @@ class FormattedSystemInfo(object):
         os_pretty_name_ = self.__sys_info.pretty_name
         name = (
             os_pretty_name_ if os_pretty_name_ else
-            self.__sys_info.name + '' + self.__sys_info.get_version())
+            self.__sys_info.name + '' + self.__sys_info.version)
         os_name = name + ' ' + self.__sys_info.codename
 
         if not os_name and not os_pretty_name_:
@@ -65,11 +65,11 @@ class FormattedSystemInfo(object):
 
     def __format_kernel(self) -> str | None:
         # ...
-        kernel = self.__sys_info.get_kernel()
+        kernel = self.__sys_info.kernel
         if kernel:
-            kernel = f'{kernel} {self.__sys_info.get_kernel_version()}'
+            kernel = f'{kernel} {self.__sys_info.kernel_version}'
 
-        architecture = self.__sys_info.get_kernel_architecture()
+        architecture = self.__sys_info.kernel_architecture
         if kernel and architecture:
             kernel = f'{kernel} [{architecture} bits]'
 
@@ -77,8 +77,8 @@ class FormattedSystemInfo(object):
 
     def __format_motherboard(self) -> str | None:
         # ...
-        motherboard = self.__sys_info.get_motherboard()
-        motherboard_version = self.__sys_info.get_motherboard_version()
+        motherboard = self.__sys_info.motherboard
+        motherboard_version = self.__sys_info.motherboard_version
 
         if motherboard and motherboard_version:
             return '{} - {}'.format(motherboard, motherboard_version)
@@ -91,8 +91,8 @@ class FormattedSystemInfo(object):
 
     def __format_cpu(self) -> str | None:
         # ...
-        cpu = self.__sys_info.get_cpu()
-        architecture = self.__sys_info.get_cpu_architecture()
+        cpu = self.__sys_info.cpu
+        architecture = self.__sys_info.cpu_architecture
 
         if cpu and architecture:
             cpu = f'{cpu} [{architecture}]'
@@ -101,23 +101,23 @@ class FormattedSystemInfo(object):
 
     def __format_gpu(self) -> str | None:
         # ...
-        gpu = self.__sys_info.get_gpu()
+        gpu = self.__sys_info.gpu
         return gpu if gpu else None
 
     def __format_ram(self) -> str | None:
         # ...
-        ram = self.__sys_info.get_ram()
-        used = self.__sys_info.get_ram_used()
-        free = self.__sys_info.get_ram_free()
+        ram = self.__sys_info.ram
+        used = self.__sys_info.ram_used
+        free = self.__sys_info.ram_free
         return (
             '{}, {} used, {} free'.format(ram, used, free)
             if ram else None)
 
     def __format_swap(self) -> str | None:
         # ...
-        swap = self.__sys_info.get_swap()
-        used = self.__sys_info.get_swap_used()
-        free = self.__sys_info.get_swap_free()
+        swap = self.__sys_info.swap
+        used = self.__sys_info.swap_used
+        free = self.__sys_info.swap_free
         return (
             '{}, {} used, {} free'.format(swap, used, free)
             if swap else None)
