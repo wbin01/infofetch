@@ -27,13 +27,36 @@ class InfoFetch(object):
         self.__colorbar_item_width = 1
         self.__colorbar_is_legacy = False
         self.__colorbar_is_mirrored = True
+        self.__colorbar = ansi.colorbar.ColorBar(
+            self.__logo.image_accent_color.split(';'))
 
-    def fetch(self) -> None:
+    @property
+    def colobar_item_width(self) -> int:
+        """..."""
+        return self.__colorbar_item_width
+
+    @colobar_item_width.setter
+    def colobar_item_width(self, value: int) -> None:
+        self.__colorbar_item_width = value
+        self.__colorbar.color_item_width = self.__colorbar_item_width
+
+    @property
+    def colorbar_is_legacy(self) -> bool:
+        """..."""
+        return self.__colorbar_is_legacy
+
+    @colorbar_is_legacy.setter
+    def colorbar_is_legacy(self, value: bool) -> None:
+        self.__colorbar_is_legacy = value
+        self.__colorbar.is_legacy = self.__colorbar_is_legacy
+
+    def fetch(self) -> int:
         """..."""
         self.__set_same_amount_of_lines_for_logo_and_info()
         for img_line, text_line in zip(
                 self.__logo.ansi_lines, self.__infos):
             print(img_line, text_line)
+        return 0
 
     def __get_logo(self) -> ansi.ansicolorimage:
         # ...
@@ -72,15 +95,22 @@ class InfoFetch(object):
         len_image = len(self.__logo.ansi_lines)
         len_info = len(self.__infos)
 
-        bar = ansi.colorbar.ColorBar(self.__logo.image_accent_color.split(';'))
-        color_bar = bar.colorbar
-
         if len_image < len_info:
-            self.__infos[-1] = color_bar
+            self.__infos[-1] = self.__colorbar.colorbar
             for _ in range(len_info - len_image):
                 self.__logo.ansi_lines.append(' ' * self.__logo.width)
         else:
             for _ in range(len_image - len_info):
                 self.__infos.append(' ')
 
-            self.__infos[-1] = color_bar
+            self.__infos[-1] = self.__colorbar.colorbar
+
+
+def main() -> None:
+    """..."""
+    infofetch = InfoFetch()
+    infofetch.fetch()
+
+
+if __name__ == '__main__':
+    main()
