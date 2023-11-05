@@ -80,6 +80,7 @@ class ColorBar(object):
             self.__colorbar = self.__get_legacy_colorbar()
             return
 
+        self.__darken_color(50)
         colors_sig = []
         for num in self.__color:
             color_sig = num + '+' if int(num) + 100 < 255 else num + '-'
@@ -120,3 +121,14 @@ class ColorBar(object):
             colorbar = ''.join([str(x) for x in colors])
 
         self.__colorbar = colorbar + '\x1B[0m'
+
+    def __darken_color(self, weight: int) -> None:
+        # ...
+        colors = []
+        for num in self.__color:
+            int_num = int(num)
+            if int_num - weight >= 0:
+                colors.append(str(int_num - weight))
+            else:
+                colors.append(num)
+        self.__color = colors
