@@ -3,7 +3,7 @@ import os
 import re
 import subprocess
 
-import desktopentryparse
+import info.desktopentryparse
 
 
 class SystemInfo(object):
@@ -723,7 +723,7 @@ class SystemInfo(object):
 
         kdeglobals = os.path.join(os.environ['HOME'], '.config', 'kdeglobals')
         if os.path.isfile(kdeglobals):
-            kdeglobals_file = desktopentryparse.DesktopFile(kdeglobals)
+            kdeglobals_file = info.desktopentryparse.DesktopFile(kdeglobals)
             if ('[KDE]' in kdeglobals_file.content and
                     'widgetStyle' in kdeglobals_file.content['[KDE]']):
                 self.__kde_style = kdeglobals_file.content['[KDE]'][
@@ -739,7 +739,7 @@ class SystemInfo(object):
 
         kdeglobals = os.path.join(os.environ['HOME'], '.config', 'kdeglobals')
         if os.path.isfile(kdeglobals):
-            kdeglobals_file = desktopentryparse.DesktopFile(kdeglobals)
+            kdeglobals_file = info.desktopentryparse.DesktopFile(kdeglobals)
             if ('[Icons]' in kdeglobals_file.content and
                     'Theme' in kdeglobals_file.content['[Icons]']):
                 self.__kde_icons = kdeglobals_file.content['[Icons]'][

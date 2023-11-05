@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import systeminfo
+import info.systeminfo
 
 
 class FormattedSystemInfo(object):
@@ -11,7 +11,7 @@ class FormattedSystemInfo(object):
 
     def __init__(self) -> None:
         """..."""
-        self.__sys_info = systeminfo.SystemInfo()
+        self.__sys_info = info.systeminfo.SystemInfo()
         self.__system_fetch_as_dict = None
 
     @property
