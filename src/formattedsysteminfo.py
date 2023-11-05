@@ -124,17 +124,17 @@ class FormattedSystemInfo(object):
 
     def __format_resolution(self) -> str | None:
         # ...
-        resolution = self.__sys_info.get_screen_resolution()
+        resolution = self.__sys_info.screen_resolution
         return resolution if resolution else None
 
     def __format_uptime(self) -> str | None:
         # ...
-        uptime = self.__sys_info.get_uptime()
+        uptime = self.__sys_info.uptime
         return uptime if uptime else None
 
     def __format_shell(self) -> str | None:
         # ...
-        shell = self.__sys_info.get_shell()
+        shell = self.__sys_info.shell
 
         if 'bash' in shell.lower():
             shell = 'Bash'
@@ -142,8 +142,8 @@ class FormattedSystemInfo(object):
 
     def __format_desktop_environment(self) -> str | None:
         # ...
-        _de = self.__sys_info.get_desktop_environment()
-        _de_version = self.__sys_info.get_desktop_environment_version()
+        _de = self.__sys_info.desktop_environment
+        _de_version = self.__sys_info.desktop_environment_version
 
         de = _de if _de else ''
         de_version = _de_version if _de_version else ''
@@ -154,12 +154,12 @@ class FormattedSystemInfo(object):
 
     def __format_window_manager(self) -> str | None:
         # ...
-        wm = self.__sys_info.get_window_manager()
+        wm = self.__sys_info.window_manager
         return wm if wm else None
 
     def __format_display_server(self) -> str | None:
         # ...
-        ds = self.__sys_info.get_display_server()
+        ds = self.__sys_info.display_server
         return ds if ds else None
 
     def __format_style_theme(self) -> str | None:
@@ -190,22 +190,22 @@ class FormattedSystemInfo(object):
 
         return ', '.join(icons)
 
-    def __format_packages(self) -> str:
+    def __format_packages(self) -> str | None:
         # ...
+        native_packages_name = self.__sys_info.package_manager
+        if not native_packages_name:
+            return None
 
-        # Native
-        str_num_native_packages = self.__sys_info.get_packages()
-        native_packages_name = self.__sys_info.get_package_manager()
+        str_num_native_packages = self.__sys_info.packages
+        if not str_num_native_packages:
+            return None
 
-        # Total packages
         total_packages = str_num_native_packages
-
-        # Return var
         packages = '{} {}'.format(total_packages, native_packages_name)
 
         # If Flatpak or snap
-        str_num_flatpak_packages = self.__sys_info.get_flatpak_packages()
-        str_num_snap_packages = self.__sys_info.get_snap_packages()
+        str_num_flatpak_packages = self.__sys_info.flatpak_packages
+        str_num_snap_packages = self.__sys_info.snap_packages
 
         if str_num_flatpak_packages or str_num_snap_packages:
             # Only Flatpak

@@ -47,9 +47,9 @@ class SystemInfo(object):
         self.__desktop_environment = None
         self.__desktop_environment_version = None
         self.__window_manager = None
-        self.__package_manager = None
-        self.__display_server = None
         self.__packages = None
+        self.__package_manager = self.package_manager
+        self.__display_server = None
         self.__flatpak_packages = None
         self.__snap_packages = None
         self.__kde_style = None
@@ -485,62 +485,74 @@ class SystemInfo(object):
         # Already updated in self.ram
         return self.__swap_free
 
-    def get_screen_resolution(self) -> str:
+    @property
+    def screen_resolution(self) -> str | None:
         """..."""
         if self.__screen_resolution:
             return self.__screen_resolution
 
+        resolution = ''
         if subprocess.getoutput('xrandr ; echo $?')[-1] == '0':
             resolution = subprocess.getoutput(
                 "xrandr | grep current | awk -F , '{print $2}'")
-            self.__screen_resolution = resolution.replace(
-                ' current ', '').replace(' x ', 'x')
+            resolution = resolution.replace(
+                ' current ', '').replace(' x ', 'x').strip()
+        self.__screen_resolution = resolution if resolution else None
 
         return self.__screen_resolution
 
-    def get_uptime(self) -> str:
+    @property
+    def uptime(self) -> str | None:
         """..."""
         if self.__uptime:
             return self.__uptime
 
         uptime = subprocess.getoutput('uptime -p')
         if uptime[:7] == 'uptime:':
-            self.__uptime = subprocess.getoutput(
+            uptime = subprocess.getoutput(
                 'uptime').split(',')[0][9:].replace('up', '').strip() + ' Hs'
         else:
-            self.__uptime = uptime.replace('up ', '')
+            uptime = uptime.replace('up ', '').strip()
 
+        self.__uptime = uptime if uptime else None
         return self.__uptime
 
-    def get_shell(self) -> str:
+    @property
+    def shell(self) -> str | None:
         """..."""
         if self.__shell:
             return self.__shell
 
-        self.__shell = subprocess.getoutput('basename $SHELL')
+        shell = subprocess.getoutput('basename $SHELL').strip()
+        self.__shell = shell if shell else None
+
         return self.__shell
 
-    def get_desktop_environment(self) -> str:
+    @property
+    def desktop_environment(self) -> str | None:
         """..."""
         if self.__desktop_environment:
             return self.__desktop_environment
 
-        desktop_environment = subprocess.getoutput(
+        de_env = subprocess.getoutput(
             'echo $XDG_CURRENT_DESKTOP').replace(':', '-').strip()
 
         # Limpar
         dirt_to_clean = ['(', ')', "'", '"', 'X-']
         for cleaning_item in dirt_to_clean:
-            self.__desktop_environment = desktop_environment.replace(
-                cleaning_item, '')
+            de_env = de_env.replace(
+                cleaning_item, '').strip()
 
         # Customizar
-        if 'kde' in self.__desktop_environment.lower():
-            self.__desktop_environment = 'Plasma (KDE)'
+        if 'kde' in de_env.lower():
+            de_env = 'Plasma (KDE)'
+
+        self.__desktop_environment = de_env.strip() if de_env.strip() else None
 
         return self.__desktop_environment
 
-    def get_desktop_environment_version(self) -> str:
+    @property
+    def desktop_environment_version(self) -> str | None:
         """..."""
         if self.__desktop_environment_version:
             return self.__desktop_environment_version
@@ -556,30 +568,31 @@ class SystemInfo(object):
             # pantheon elementary
             'xfce': "xfce4-about -V | grep xfce4-about | awk '{print $2}'",
         }
-        de = self.get_desktop_environment().lower()
-        desktop_environment_version = str()
+        de = self.desktop_environment.lower()
+        de_version = ''
         for cmd_version_key, cmd_version_value in cmd_version.items():
             if cmd_version_key in de:
-                desktop_environment_version = subprocess.getoutput(
-                    cmd_version_value)
+                de_version = subprocess.getoutput(
+                    cmd_version_value).strip()
                 break
 
         # Limpar
         dirt_to_clean = ['(', ')', "'", '"', 'X-']
         for cleaning_item in dirt_to_clean:
-            self.__desktop_environment_version = (
-                desktop_environment_version.replace(cleaning_item, ''))
+            de_version = de_version.replace(cleaning_item, '').strip()
 
         # Customizar
         error = ['bash: ', '/bin/sh: ']
         for item_error in error:
-            if item_error in self.__desktop_environment_version.lower():
-                self.__desktop_environment_version = ''
+            if item_error in de_version.lower():
+                de_version = ''
                 break
 
+        self.__desktop_environment_version = de_version if de_version else None
         return self.__desktop_environment_version
 
-    def get_window_manager(self) -> str:
+    @property
+    def window_manager(self) -> str | None:
         """..."""
         if self.__window_manager:
             return self.__window_manager
@@ -600,37 +613,38 @@ class SystemInfo(object):
                     cmd_xprop.split()[-1])).split('=')[-1].replace(
                 '"', '').strip()
 
-        self.__window_manager = cmd_window_manager.replace(',', ' | ').replace(
-            '(', '').replace(')', '')
+        window_manager = cmd_window_manager.replace(',', ' | ').replace(
+            '(', '').replace(')', '').strip()
 
         if 'xprop:' in cmd_window_manager:
-            self.__window_manager = ''
+            window_manager = ''
 
         # Custom
-        if self.__window_manager:
-            if 'mutter' in self.__window_manager.lower():
-                self.__window_manager = 'Mutter'
+        if window_manager:
+            if 'mutter' in window_manager.lower():
+                window_manager = 'Mutter'
 
+        self.__window_manager = window_manager if window_manager else None
         return self.__window_manager
 
-    def get_display_server(self) -> str:
+    @property
+    def display_server(self) -> str | None:
         """..."""
         if self.__display_server:
             return self.__display_server
 
-        self.__display_server = subprocess.getoutput('echo $XDG_SESSION_TYPE')
+        display_server = subprocess.getoutput('echo $XDG_SESSION_TYPE').strip()
 
         # Custom
-        if 'wayland' in self.__display_server.lower():
-            self.__display_server = 'Wayland'
+        if 'wayland' in display_server.lower():
+            display_server = 'Wayland'
 
+        self.__display_server = display_server if display_server else None
         return self.__display_server
 
-    def get_package_manager(self) -> str:
+    @property
+    def package_manager(self) -> str | None:
         """..."""
-        if self.__package_manager:
-            return self.__package_manager
-
         cmd_packages = {
             'dpkg': 'dpkg --get-selections | grep -cv deinstall$',
             'rpm': 'rpm -qa | wc -l',
@@ -638,36 +652,50 @@ class SystemInfo(object):
             'eopkg': 'eopkg list-installed | wc -l',
         }
 
+        package_manager = ''
+        packages = ''
         for cmd_packages_key, cmd_packages_value in cmd_packages.items():
-            number = int(subprocess.getoutput(cmd_packages_value).split()[-1])
+            num = subprocess.getoutput(cmd_packages_value).split()[-1].strip()
+            number = int(num) if num.isdigit() else None
 
-            if number > 0:
-                self.__package_manager = cmd_packages_key
-                self.__packages = str(number)
+            if number is not None and number > 0:
+                package_manager = cmd_packages_key
+                packages = str(number)
+                break
+
+        if package_manager not in cmd_packages.keys():
+            self.__package_manager = None
+            self.__packages = None
+        else:
+            self.__package_manager = package_manager
+            self.__packages = packages
 
         return self.__package_manager
 
-    def get_packages(self) -> str:
+    @property
+    def packages(self) -> str | None:
         """..."""
-        if self.__packages:
-            return self.__packages
-
-        self.get_package_manager()
-
+        # Already updated in self.package_manager
         return self.__packages
 
-    def get_flatpak_packages(self) -> str:
+    @property
+    def flatpak_packages(self) -> str | None:
         """..."""
         if self.__flatpak_packages:
             return self.__flatpak_packages
 
-        number = int(subprocess.getoutput('flatpak list | wc -l').split()[-1])
-        if number > 0:
-            self.__flatpak_packages = str(number)
+        num = subprocess.getoutput('flatpak list | wc -l').split()[-1].strip()
+        number = int(num) if num.isdigit() else None
 
+        packages = ''
+        if number and number > 0:
+            packages = str(number)
+
+        self.__flatpak_packages = packages if packages else None
         return self.__flatpak_packages
 
-    def get_snap_packages(self) -> str:
+    @property
+    def snap_packages(self) -> str | None:
         """..."""
         if self.__snap_packages:
             return self.__snap_packages
@@ -677,10 +705,14 @@ class SystemInfo(object):
         # 'snap list | grep -v "^Name" | wc -l').split()[-1])
 
         # Remove cabeçalho com '-1' no fim
-        number = int(subprocess.getoutput('snap list | wc -l').split()[-1]) - 1
-        if number > 0:
-            self.__snap_packages = str(number)
+        num = subprocess.getoutput('snap list | wc -l').split()[-1].strip()
+        number = int(num) - 1 if num.isdigit() else None
 
+        packages = ''
+        if number and number > 0:
+            packages = str(number)
+
+        self.__snap_packages = packages if packages else None
         return self.__snap_packages
 
     @property
@@ -765,19 +797,22 @@ if __name__ == '__main__':
     print('                       swap:', linux_info.swap)
     print('                  swap-used:', linux_info.swap_used)
     print('                  swap-free:', linux_info.swap_free)
-    print('          screen-resolution:', linux_info.get_screen_resolution())
-    print('                     uptime:', linux_info.get_uptime())
-    print('                      shell:', linux_info.get_shell())
-    print('        desktop-environment:', linux_info.get_desktop_environment())
+    print('          screen-resolution:', linux_info.screen_resolution)
+    print('                     uptime:', linux_info.uptime)
+    print('                      shell:', linux_info.shell)
+    print('        desktop-environment:', linux_info.desktop_environment)
     print('desktop-environment-version:',
-          linux_info.get_desktop_environment_version())
-    print('             window-manager:', linux_info.get_window_manager())
-    print('             display-server:', linux_info.get_display_server())
-    print('            package-manager:', linux_info.get_package_manager())
-    print('                   packages:', linux_info.get_packages())
-    print('           flatpak-packages:', linux_info.get_flatpak_packages())
-    print('              snap-packages:', linux_info.get_snap_packages())
+          linux_info.desktop_environment_version)
+    print('             window-manager:', linux_info.window_manager)
+    print('             display-server:', linux_info.display_server)
+    print('            package-manager:', linux_info.package_manager)
+    print('                   packages:', linux_info.packages)
+    print('           flatpak-packages:', linux_info.flatpak_packages)
+    print('              snap-packages:', linux_info.snap_packages)
     print('                  kde-style:', linux_info.kde_style)
+    print('                  kde-icons:', linux_info.kde_icons)
+    print('                  gtk-style:', linux_info.gtk_style)
+    print('                  gtk-icons:', linux_info.gtk_icons)
 
     print()
     print('OS release:')
