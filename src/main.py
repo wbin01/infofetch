@@ -64,13 +64,25 @@ class SystemInfo(object):
 
         len_image = len(self.__os_logo.ansi_lines)
         len_info = len(self.__os_informations)
+        color_bar = (
+            '\x1b[48;2;53;53;159m \x1b[48;2;64;113;191m \x1b[48;2;64;170;191m '
+            '\x1b[48;2;127;212;169m \x1b[48;2;169;212;127m '
+            '\x1b[48;2;191;191;64m \x1b[48;2;191;170;64m '
+            '\x1b[48;2;191;148;64m \x1b[48;2;191;106;64m \x1b[48;2;196;57;57m '
+            '\x1b[48;2;148;50;50m \x1b[48;2;138;50;116m \x1b[48;2;107;61;166m '
+            '\x1B[0m')
 
         if len_image < len_info:
+            self.__os_informations[-1] = color_bar
+
             for _ in range(len_info - len_image):
                 self.__os_logo.ansi_lines.append(' ' * self.__os_logo.width)
+
         else:
             for _ in range(len_image - len_info):
                 self.__os_informations.append(' ')
+
+            self.__os_informations[-1] = color_bar
 
 
 def main() -> None:
