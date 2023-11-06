@@ -15,14 +15,14 @@ class Application(object):
 
     def __create_args(self) -> None:
         # ...
-        for arg in ' '.join(sys.argv[1:]).split(' -'):
+        for num, arg in enumerate(' '.join(sys.argv).split(' -')):
             arg = arg.strip().strip('"').strip("'")
-
-            if ' ' in arg:
-                key, value = arg.split(' ')
-                self.__args_k_v[key] = value.strip('"').strip("'")
-            else:
-                self.__args_k_v[arg] = ''
+            if num > 0:
+                if ' ' in arg:
+                    key, value = arg.split(' ')
+                    self.__args_k_v['-' + key] = value.strip('"').strip("'")
+                else:
+                    self.__args_k_v['-' + arg] = ''
 
     def __set_args(self) -> None:
         # ...
@@ -31,7 +31,7 @@ class Application(object):
 
         self.__create_args()
         for key, value in self.__args_k_v.items():
-            if key == '--colobar-item-width':
+            if key == '--colorbar-item-width':
                 self.__arg_colobar_item_width(value)
             elif key == '--colorbar-legacy':
                 self.__arg_colorbar_legacy(value)
@@ -54,8 +54,9 @@ class Application(object):
             self.__app.colobar_item_width = 1
         else:
             self.__errors_found = True
-            print(f"Error '{value}'.\nThe value must be an integer such as "
-                  "'1' or '2', or 'auto' for the default value.")
+            print(f"Error: --colorbar-item-width '{value}'.\nThe value must "
+                  "be an integer such as '1' or '2', or 'auto' for the "
+                  "default value.")
 
     def __arg_colorbar_legacy(self, value) -> None:
         # ...
@@ -65,8 +66,8 @@ class Application(object):
             self.__app.colorbar_is_legacy = False
         else:
             self.__errors_found = True
-            print(f"Error '{value}'.\nThe value needs to be 'true', 'false' or"
-                  " 'auto' for the default value.")
+            print(f"Error: --colorbar-legacy '{value}'.\nThe value needs to be"
+                  " 'true', 'false' or 'auto' for the default value.")
 
     def __arg_colorbar_small(self, value) -> None:
         # ...
@@ -76,8 +77,8 @@ class Application(object):
             self.__app.colorbar_is_mirrored = True
         else:
             self.__errors_found = True
-            print(f"Error '{value}'.\nThe value needs to be 'true', 'false' or"
-                  " 'auto' for the default value.")
+            print(f"Error: --colorbar-small '{value}'.\nThe value needs to be "
+                  "'true', 'false' or 'auto' for the default value.")
 
     @staticmethod
     def __arg_help(value) -> None:
