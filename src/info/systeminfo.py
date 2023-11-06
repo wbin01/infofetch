@@ -32,6 +32,12 @@ class SystemInfo(object):
         self.__kernel_architecture = None
         self.__motherboard = None
         self.__motherboard_version = None
+        self.__root_disk_size = None
+        self.__root_disk_used = None
+        self.__root_disk_free = None
+        self.__root_disk_used_in_percent = None
+        self.__root_disk_mount_point = None
+        self.__root_disk_path = self.root_disk_path
         self.__cpu = None
         self.__cpu_architecture = None
         self.__gpu = None
@@ -332,6 +338,47 @@ class SystemInfo(object):
         self.__motherboard_version = version if version else None
 
         return self.__motherboard_version
+
+    @property
+    def root_disk_path(self) -> str | None:
+        """..."""
+        disk_info = [
+            x.split() for x in subprocess.getoutput('df -h /').split('\n')][1]
+
+        if len(disk_info) == 6:
+            self.__root_disk_path = disk_info[0]
+            self.__root_disk_size = disk_info[1]
+            self.__root_disk_used = disk_info[2]
+            self.__root_disk_free = disk_info[3]
+            self.__root_disk_used_in_percent = disk_info[4]
+            self.__root_disk_mount_point = disk_info[5]
+
+        return self.__root_disk_path
+
+    @property
+    def root_disk_size(self) -> str | None:
+        """..."""
+        return self.__root_disk_size
+
+    @property
+    def root_disk_used(self) -> str | None:
+        """..."""
+        return self.__root_disk_used
+
+    @property
+    def root_disk_free(self) -> str | None:
+        """..."""
+        return self.__root_disk_free
+
+    @property
+    def root_disk_used_in_percent(self) -> str | None:
+        """..."""
+        return self.__root_disk_used_in_percent
+
+    @property
+    def root_disk_mount_point(self) -> str | None:
+        """..."""
+        return self.__root_disk_mount_point
 
     @property
     def cpu(self) -> str | None:

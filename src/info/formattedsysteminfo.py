@@ -32,6 +32,7 @@ class FormattedSystemInfo(object):
                 'Shell': self.__format_shell(),
                 'Uptime': self.__format_uptime(),
                 'Board': self.__format_motherboard(),
+                'Disk': self.__format_disk(),
                 'CPU': self.__format_cpu(),
                 'GPU': self.__format_gpu(),
                 'RAM': self.__format_ram(),
@@ -88,6 +89,35 @@ class FormattedSystemInfo(object):
 
         else:
             return None
+
+    def __format_disk(self) -> str | None:
+        """
+        self.__root_disk_size = None
+        self.__root_disk_used = None
+        self.__root_disk_free = None
+        self.__root_disk_used_in_percent = None
+
+        self.__root_disk_mount_point = None
+        self.__root_disk_path = self.root_disk_path
+        """
+        output = ''
+
+        disk_mount_point = self.__sys_info.root_disk_mount_point
+        disk_path = self.__sys_info.root_disk_path.split("/")[2]
+        disk_size = self.__sys_info.root_disk_size
+        if disk_mount_point and disk_path and disk_size:
+            output += f'"{disk_mount_point}" {disk_size}'
+
+        disk_used = self.__sys_info.root_disk_used
+        disk_used_in_percent = self.__sys_info.root_disk_used_in_percent
+        if disk_used and disk_size:
+            output += f', {disk_used} used ({disk_used_in_percent})'
+
+        disk_free = self.__sys_info.root_disk_free
+        if disk_free:
+            output += f', {disk_used} free'
+
+        return output
 
     def __format_cpu(self) -> str | None:
         # ...
