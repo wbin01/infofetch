@@ -22,11 +22,11 @@ class Application(object):
                 key, value = arg.split(' ')
                 self.__args_k_v[key] = value.strip('"').strip("'")
             else:
-                self.__args_k_v[arg] = None
+                self.__args_k_v[arg] = ''
 
     def __set_args(self) -> None:
         # ...
-        if len(sys.argv) < 1:
+        if len(sys.argv) <= 1:
             return
 
         self.__create_args()
