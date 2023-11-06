@@ -50,6 +50,16 @@ class InfoFetch(object):
         self.__colorbar_is_legacy = value
         self.__colorbar.is_legacy = self.__colorbar_is_legacy
 
+    @property
+    def colorbar_is_mirrored(self) -> bool:
+        """..."""
+        return self.__colorbar_is_mirrored
+
+    @colorbar_is_mirrored.setter
+    def colorbar_is_mirrored(self, value: bool) -> None:
+        self.__colorbar_is_mirrored = value
+        self.__colorbar.is_mirrored = self.__colorbar_is_mirrored
+
     def fetch(self) -> int:
         """..."""
         self.__set_same_amount_of_lines_for_logo_and_info()

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import logging
 import sys
 
 import infofetch
@@ -6,54 +7,97 @@ import infofetch
 
 class Application(object):
     """..."""
-    def __init__(self, args: list) -> None:
+    def __init__(self) -> None:
         """..."""
-        self.__args = args
+        self.__args_k = []
+        self.__args_k_v = {}
+        self.__errors_found = False
         self.__app = infofetch.InfoFetch()
+
+    def __create_args(self) -> None:
+        # ...
+        for arg in ' '.join(sys.argv[1:]).split(' -'):
+            arg = arg.strip().strip('"').strip("'")
+            try:
+                if ' ' in arg:
+                    key, value = arg.split(' ')
+                    self.__args_k_v[key] = value.strip('"').strip("'")
+                else:
+                    self.__args_k.append(arg)
+            except ValueError:
+                print('Argument used incorrectly!', '\nUse --help')
+                sys.exit(1)
 
     def __set_args(self) -> None:
         # ...
-        if not len(self.__args) > 1:
+        if len(sys.argv) < 1:
             return
 
-        for key, value in {
-            x.split('=')[0]: x.split('=')[1].strip('"').strip("'")
-                for x in self.__args if '=' in x}.items():
-
+        self.__create_args()
+        for key, value in self.__args_k_v.items():
             if key == '--colobar-item-width':
-                if value.isdigit():
-                    self.__app.colobar_item_width = int(value)
-                elif value == 'auto':
-                    self.__app.colobar_item_width = 1
-                else:
-                    raise ValueError(
-                        "The value must be an integer ('1' or '2'), "
-                        "or the default value ('auto').")
-
+                self.__arg_colobar_item_width(value)
             elif key == '--colorbar-legacy':
-                if value == 'true':
-                    self.__app.colorbar_is_legacy = True
-                elif value == 'false' or value == 'auto':
-                    self.__app.colorbar_is_legacy = False
-                else:
-                    raise ValueError(
-                        "The value needs to be 'true', 'false' or 'auto' "
-                        "for the default value.")
-
+                self.__arg_colorbar_legacy(value)
             elif key == '--colorbar-small':
-                pass
+                self.__arg_colorbar_small(value)
+            if self.__errors_found:
+                sys.exit(1)
 
-            elif key == '--colo':
-                pass
+        for value in self.__args_k:
+            if value == '--help' or value == '-h':
+                self.__arg_help()
+            else:
+                self.__errors_found = True
+                print('Argument used incorrectly!', '\nUse --help')
 
-            elif key == '--col':
-                pass
+            if self.__errors_found:
+                sys.exit(1)
 
-            elif key == '--co':
-                pass
+    def __arg_colobar_item_width(self, value) -> None:
+        # ...
+        if value.isdigit():
+            self.__app.colobar_item_width = int(value)
+        elif value == 'auto':
+            self.__app.colobar_item_width = 1
+        else:
+            self.__errors_found = True
+            print(f"Error '{value}'.\nThe value must be an integer such as "
+                  "'1' or '2', or 'auto' for the default value.")
 
-            elif key == '--colo':
-                pass
+    def __arg_colorbar_legacy(self, value) -> None:
+        # ...
+        if value == 'true':
+            self.__app.colorbar_is_legacy = True
+        elif value == 'false' or value == 'auto':
+            self.__app.colorbar_is_legacy = False
+        else:
+            self.__errors_found = True
+            print(f"Error '{value}'.\nThe value needs to be 'true', 'false' or"
+                  " 'auto' for the default value.")
+
+    def __arg_colorbar_small(self, value) -> None:
+        # ...
+        if value == 'true':
+            self.__app.colorbar_is_mirrored = False
+        elif value == 'false' or value == 'auto':
+            self.__app.colorbar_is_mirrored = True
+        else:
+            self.__errors_found = True
+            print(f"Error '{value}'.\nThe value needs to be 'true', 'false' or"
+                  " 'auto' for the default value.")
+
+    @staticmethod
+    def __arg_help() -> None:
+        # ...
+        print(
+            'infofetch <--arg> <value>\n'
+            'infofetch <--arg>\n\n'
+            '--help, -h                Display this help and exit\n'
+            '--colobar-item-width <1>  Chars num each color uses\n'
+            '--colorbar-legacy <true>  Use the old color bar\n'
+            '--colorbar-small <false>  Only half of the color bar\n')
+        sys.exit(0)
 
     def main(self) -> None:
         """..."""
@@ -62,5 +106,5 @@ class Application(object):
 
 
 if __name__ == '__main__':
-    app = Application(sys.argv)
+    app = Application()
     sys.exit(app.main())
