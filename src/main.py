@@ -9,7 +9,6 @@ class Application(object):
     """..."""
     def __init__(self) -> None:
         """..."""
-        self.__args_k = []
         self.__args_k_v = {}
         self.__errors_found = False
         self.__app = infofetch.InfoFetch()
@@ -18,15 +17,12 @@ class Application(object):
         # ...
         for arg in ' '.join(sys.argv[1:]).split(' -'):
             arg = arg.strip().strip('"').strip("'")
-            try:
-                if ' ' in arg:
-                    key, value = arg.split(' ')
-                    self.__args_k_v[key] = value.strip('"').strip("'")
-                else:
-                    self.__args_k.append(arg)
-            except ValueError:
-                print('Argument used incorrectly!', '\nUse --help')
-                sys.exit(1)
+
+            if ' ' in arg:
+                key, value = arg.split(' ')
+                self.__args_k_v[key] = value.strip('"').strip("'")
+            else:
+                self.__args_k_v[arg] = None
 
     def __set_args(self) -> None:
         # ...
@@ -41,15 +37,11 @@ class Application(object):
                 self.__arg_colorbar_legacy(value)
             elif key == '--colorbar-small':
                 self.__arg_colorbar_small(value)
-            if self.__errors_found:
-                sys.exit(1)
-
-        for value in self.__args_k:
-            if value == '--help' or value == '-h':
-                self.__arg_help()
+            elif key == '--help' or key == '-h':
+                self.__arg_help(value)
             else:
-                self.__errors_found = True
-                print('Argument used incorrectly!', '\nUse --help')
+                print(f"Argument '{key}' unknown. Use --help.")
+                sys.exit(1)
 
             if self.__errors_found:
                 sys.exit(1)
@@ -88,8 +80,12 @@ class Application(object):
                   " 'auto' for the default value.")
 
     @staticmethod
-    def __arg_help() -> None:
+    def __arg_help(value) -> None:
         # ...
+        if value:
+            print(f"Argument '{value}' unknown. Use --help.")
+            sys.exit(1)
+
         print(
             'infofetch <--arg> <value>\n'
             'infofetch <--arg>\n\n'
