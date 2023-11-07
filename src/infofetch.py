@@ -75,7 +75,7 @@ class InfoFetch(object):
         img = ''
         for obj_file in os.listdir('/usr/share/pixmaps'):
             if sysinfo.name_id.lower() in obj_file.lower():
-                if obj_file.endswith('.png'):
+                if obj_file.endswith('.png') or obj_file.endswith('.svg'):
                     img = os.path.join('/usr/share/pixmaps', obj_file)
                     break
 
