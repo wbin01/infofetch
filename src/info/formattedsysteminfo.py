@@ -32,7 +32,7 @@ class FormattedSystemInfo(object):
                 'Shell': self.__format_shell(),
                 'Uptime': self.__format_uptime(),
                 'Board': self.__format_motherboard(),
-                'Disk': self.__format_disk(),
+                'Storage': self.__format_disk(),
                 'CPU': self.__format_cpu(),
                 'GPU': self.__format_gpu(),
                 'RAM': self.__format_ram(),
