@@ -73,11 +73,11 @@ class InfoFetch(object):
         sysinfo = info.systeminfo.SystemInfo()
 
         img = None
-        for item in os.listdir('/usr/share/pixmaps'):
-            if sysinfo.name_id.lower() in item.lower():
-                img = os.path.join(
-                    '/usr/share/pixmaps', f'{sysinfo.name_id}.png')
-                break
+        for obj_file in os.listdir('/usr/share/pixmaps'):
+            if sysinfo.name_id.lower() in obj_file.lower():
+                if obj_file.endswith('.png'):
+                    img = os.path.join('/usr/share/pixmaps', obj_file)
+                    break
 
         if not os.path.isfile(img):
             img = os.path.join(self.__base_dir, 'resources', 'linux.png')
