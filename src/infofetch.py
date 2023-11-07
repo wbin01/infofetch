@@ -71,20 +71,16 @@ class InfoFetch(object):
     def __get_logo(self) -> ansi.ansicolorimage:
         # ...
         sysinfo = info.systeminfo.SystemInfo()
+        img = os.path.join(self.__base_dir, 'statics', 'linux.png')
 
-        img = ''
-        for obj_file in os.listdir('/usr/share/pixmaps'):
-            if sysinfo.name_id.lower() in obj_file.lower():
-                if obj_file.endswith('.png'):
-                    img = os.path.join('/usr/share/pixmaps', obj_file)
-                    break
-
-        if not os.path.isfile(img):
-            # ...
-            if sysinfo.name_id.lower() == 'linuxmint':
-                img = os.path.join(self.__base_dir, 'statics', 'linuxmint.png')
-            else:
-                img = os.path.join(self.__base_dir, 'statics', 'linux.png')
+        if sysinfo.name_id.lower() == 'linuxmint':
+            img = os.path.join(self.__base_dir, 'statics', 'linuxmint.png')
+        else:
+            for obj_file in os.listdir('/usr/share/pixmaps'):
+                if sysinfo.name_id.lower() in obj_file.lower():
+                    if obj_file.endswith('.png'):
+                        img = os.path.join('/usr/share/pixmaps', obj_file)
+                        break
 
         return ansi.ansicolorimage.AnsiColorImage(
             url_image=img, contrast=1.3, brightness=0.85)
