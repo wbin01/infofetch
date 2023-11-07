@@ -9,7 +9,7 @@ class ColorBar(object):
         :param color: RGB tuple or list like (255, 255, 255)
         """
         self.__color = color
-        self.__color_item_width = 1
+        self.__color_item_width = 2
         self.__is_legacy = False
         self.__is_mirrored = True
         self.__colorbar = None
@@ -87,7 +87,7 @@ class ColorBar(object):
             colors_sig.append(color_sig)
 
         colors = []
-        for _ in range(10):
+        for _ in range(5):
             update_colors_sig = []
             ansi = ''
 
