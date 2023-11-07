@@ -72,7 +72,7 @@ class InfoFetch(object):
         # ...
         sysinfo = info.systeminfo.SystemInfo()
 
-        img = None
+        img = ''
         for obj_file in os.listdir('/usr/share/pixmaps'):
             if sysinfo.name_id.lower() in obj_file.lower():
                 if obj_file.endswith('.png'):
