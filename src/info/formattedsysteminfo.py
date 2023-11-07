@@ -66,10 +66,10 @@ class FormattedSystemInfo(object):
         if 'VERSION_ID' in self.__sys_info.os_release:   # "22.04"
             version_id = self.__sys_info.os_release['VERSION_ID'] + ' '
 
-        codename = ('- ' + self.__sys_info.codename
+        codename = (f'({self.__sys_info.codename})'
                     if self.__sys_info.codename else '')
 
-        os_name = f'{name} ({id_like.title()}{version_id}{codename.title()})'
+        os_name = f'{name} | {id_like.title()}{version_id}{codename.title()}'
 
         if not os_name and not os_pretty_name_:
             return None
