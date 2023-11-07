@@ -76,7 +76,7 @@ class SystemInfo(object):
 
         user_name = subprocess.getoutput(
             "cat /etc/passwd | grep `echo $HOME` | awk -F ':' '{print $5}'"
-        ).strip()
+        ).strip().strip(',').strip("'").strip('"')
         self.__user_name = user_name if user_name else None
 
         return self.__user_name

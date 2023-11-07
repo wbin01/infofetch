@@ -71,7 +71,14 @@ class InfoFetch(object):
     def __get_logo(self) -> ansi.ansicolorimage:
         # ...
         sysinfo = info.systeminfo.SystemInfo()
-        img = os.path.join('/usr/share/pixmaps', f'{sysinfo.name_id}.png')
+
+        img = None
+        for item in os.listdir('/usr/share/pixmaps'):
+            if sysinfo.name_id.lower() in item.lower():
+                img = os.path.join(
+                    '/usr/share/pixmaps', f'{sysinfo.name_id}.png')
+                break
+
         if not os.path.isfile(img):
             img = os.path.join(self.__base_dir, 'resources', 'linux.png')
 
@@ -89,14 +96,15 @@ class InfoFetch(object):
         for key, value in system_info_items.system_fetch_as_dict.items():
             value_width = int(tput_cols) - len(key) - self.__logo.width - 3
 
-            if len(value) > value_width:
-                infos += "\x1b[38;2;{}m{}\x1B[0m: {}\n".format(
-                    self.__logo.image_accent_color,
-                    key,
-                    value[:value_width - 3] + '...')
-            else:
-                infos += "\x1b[38;2;{}m{}\x1B[0m: {}\n".format(
-                    self.__logo.image_accent_color, key, value)
+            if value:
+                if len(value) > value_width:
+                    infos += "\x1b[38;2;{}m{}\x1B[0m: {}\n".format(
+                        self.__logo.image_accent_color,
+                        key,
+                        value[:value_width - 3] + '...')
+                else:
+                    infos += "\x1b[38;2;{}m{}\x1B[0m: {}\n".format(
+                        self.__logo.image_accent_color, key, value)
 
         return infos.split('\n')
 

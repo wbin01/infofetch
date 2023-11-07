@@ -56,8 +56,20 @@ class FormattedSystemInfo(object):
         os_pretty_name_ = self.__sys_info.pretty_name
         name = (
             os_pretty_name_ if os_pretty_name_ else
-            self.__sys_info.name + '' + self.__sys_info.version)
-        os_name = name + ' ' + self.__sys_info.codename
+            self.__sys_info.name + ' ' + self.__sys_info.version)
+
+        id_like = ''
+        if 'ID_LIKE' in self.__sys_info.os_release:  # "Ubuntu debian"
+            id_like = self.__sys_info.os_release['ID_LIKE'] + ' '
+
+        version_id = ''
+        if 'VERSION_ID' in self.__sys_info.os_release:   # "22.04"
+            version_id = self.__sys_info.os_release['VERSION_ID'] + ' '
+
+        codename = ('- ' + self.__sys_info.codename
+                    if self.__sys_info.codename else '')
+
+        os_name = f'{name} ({id_like.title()}{version_id}{codename.title()})'
 
         if not os_name and not os_pretty_name_:
             return None
