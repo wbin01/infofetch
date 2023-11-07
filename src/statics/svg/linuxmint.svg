@@ -44,7 +44,7 @@
      id="namedview17"
      showgrid="false"
      inkscape:zoom="0.7"
-     inkscape:cx="162.14286"
+     inkscape:cx="163.57143"
      inkscape:cy="158.57143"
      inkscape:window-x="0"
      inkscape:window-y="32"
@@ -55,6 +55,13 @@
      inkscape:deskcolor="#d1d1d1" />
   <defs
      id="defs2" />
+  <rect
+     style="fill:#000000;stroke-width:4.72835;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:14.185, 14.185;paint-order:stroke fill markers;fill-opacity:1"
+     id="rect1"
+     width="500"
+     height="500"
+     x="0"
+     y="0" />
   <g
      id="layer3"
      style="stroke:#ffffff;stroke-opacity:1"

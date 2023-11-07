@@ -36,7 +36,7 @@
      id="namedview17"
      showgrid="false"
      inkscape:zoom="0.7"
-     inkscape:cx="263.57143"
+     inkscape:cx="265"
      inkscape:cy="291.42857"
      inkscape:window-x="0"
      inkscape:window-y="32"
@@ -45,7 +45,13 @@
      inkscape:showpageshadow="2"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1" /><defs
-     id="defs2" /><path
+     id="defs2" /><rect
+     style="fill:#000000;stroke-width:2.44498;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7.33492, 7.33492;paint-order:stroke fill markers"
+     id="rect1"
+     width="500"
+     height="500"
+     x="0"
+     y="0" /><path
      id="path1"
      style="fill:#e95420;fill-opacity:1;stroke:none;stroke-width:2.17469;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6.52404, 6.52404;paint-order:stroke fill markers"
      d="M 250 0 A 250 250 0 0 0 0 250 A 250 250 0 0 0 250 500 A 250 250 0 0 0 500 250 A 250 250 0 0 0 250 0 z M 250 16.310547 A 233.68908 233.68908 0 0 1 483.68945 250 A 233.68908 233.68908 0 0 1 250 483.68945 A 233.68908 233.68908 0 0 1 16.310547 250 A 233.68908 233.68908 0 0 1 250 16.310547 z " /><circle
