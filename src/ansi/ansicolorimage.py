@@ -276,10 +276,10 @@ class AnsiColorImage(object):
         self.__image_accent_color = None
 
         # Image
-        image = Image.open(self.__url_image, 'r')
-        if image.mode != 'RGB':
-            warnings.filterwarnings('ignore')  # Fix RGBA warning
-            image = image.convert('RGB')
+        image = Image.open(self.__url_image, 'r').convert('RGBA')
+
+        background = Image.new('RGBA', image.size, (0, 0, 0))
+        image = Image.alpha_composite(background, image)
 
         # Resize
         h, w = image.size
