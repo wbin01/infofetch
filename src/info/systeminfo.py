@@ -144,6 +144,13 @@ class SystemInfo(object):
         name_id = str()
 
         if 'ubuntu' in all_release_info['NAME'].lower():
+            # Kubuntu
+            if 'settings.ini' in subprocess.getoutput(
+                    'ls /usr/share/kubuntu-default-settings/'):
+                hack_name = True
+                name = 'Kubuntu'
+                name_id = 'kubuntu'
+
             # Lubuntu
             if 'openbox' in subprocess.getoutput('ls /usr/share/lubuntu/'):
                 hack_name = True
