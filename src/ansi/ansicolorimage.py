@@ -277,7 +277,6 @@ class AnsiColorImage(object):
 
         # Image
         image = Image.open(self.__url_image, 'r').convert('RGBA')
-
         background = Image.new('RGBA', image.size, (0, 0, 0))
         image = Image.alpha_composite(background, image)
 
