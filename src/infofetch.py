@@ -101,7 +101,7 @@ class InfoFetch(object):
             if not icons:
                 icons = self.__sys_info.raw_info.gtk_icons
             if icons:
-                if self.__sys_info.raw_info.os_release['LOGO']:
+                if 'LOGO' in self.__sys_info.raw_info.os_release:
                     img_path = IconTheme.getIconPath(
                         self.__sys_info.raw_info.os_release['LOGO'],
                         theme=self.__sys_info.raw_info.kde_icons)
