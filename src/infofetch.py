@@ -5,6 +5,8 @@ import subprocess
 
 # noinspection PyPackageRequirements
 from xdg import IconTheme
+# noinspection PyPackageRequirements
+import cairosvg
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -23,8 +25,8 @@ class InfoFetch(object):
         self.__base_dir = os.path.dirname(os.path.abspath(__file__))
         self.__sys_info = info.formattedsysteminfo.FormattedSystemInfo()
 
-        self.__logo_height = 25
-        self.__logo_width = 50
+        self.__logo_height = 20
+        self.__logo_width = 20
         self.__logo = self.__get_logo()
 
         self.__infos = self.__get_infos()
@@ -76,23 +78,10 @@ class InfoFetch(object):
     def __get_logo(self) -> ansi.ansicolorimage:
         # ...
         img_path = ''
-
         logo_id = info.desktopentryparse.DesktopFile(
             os.path.join(self.__base_dir, 'statics', 'logobyidrc'))
 
-        icons = self.__sys_info.raw_info.kde_icons
-        if not icons:
-            icons = self.__sys_info.raw_info.gtk_icons
-        if icons:
-            if self.__sys_info.raw_info.os_release['LOGO']:
-                img_path = IconTheme.getIconPath(
-                    self.__sys_info.raw_info.os_release['LOGO'],
-                    theme=self.__sys_info.raw_info.kde_icons)
-
-                print('>>>>>>>:', img_path)
-                if not img_path or not img_path.endswith('.png'):
-                    img_path = ''
-
+        # Statics
         if not img_path:
             if self.__sys_info.raw_info.name_id.lower() in logo_id.content[
                     '[Logos]']:
@@ -100,6 +89,7 @@ class InfoFetch(object):
                     self.__sys_info.raw_info.name_id.lower()]
                 img_path = os.path.join(self.__base_dir, 'statics', img_name)
 
+        # Pixmaps
         if not os.path.isfile(img_path):
             for objfile in os.listdir('/usr/share/pixmaps'):
                 if self.__sys_info.raw_info.name_id.lower() in objfile.lower():
@@ -107,6 +97,30 @@ class InfoFetch(object):
                         img_path = os.path.join('/usr/share/pixmaps', objfile)
                         break
 
+        # Icon theme
+        if not os.path.isfile(img_path):
+            icons = self.__sys_info.raw_info.kde_icons
+            if not icons:
+                icons = self.__sys_info.raw_info.gtk_icons
+            if icons:
+                if self.__sys_info.raw_info.os_release['LOGO']:
+                    img_path = IconTheme.getIconPath(
+                        self.__sys_info.raw_info.os_release['LOGO'],
+                        theme=self.__sys_info.raw_info.kde_icons)
+
+                    if img_path and img_path.endswith('.svg'):
+                        cairosvg.svg2png(
+                            url=img_path,
+                            write_to=f'/tmp/infofetch-logo.png',
+                            output_width=self.__logo_width,
+                            output_height=self.__logo_height)
+
+                        img_path = '/tmp/infofetch-logo.png'
+
+                    if not img_path:
+                        img_path = ''
+
+        # Default
         if not os.path.isfile(img_path):
             img_path = os.path.join(self.__base_dir, 'statics', 'linux.png')
 
