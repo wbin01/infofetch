@@ -3,9 +3,7 @@ import sys
 import os
 import subprocess
 
-# noinspection PyPackageRequirements
 from xdg import IconTheme
-# noinspection PyPackageRequirements
 import cairosvg
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -123,6 +121,11 @@ class InfoFetch(object):
         # Default
         if not os.path.isfile(img_path):
             img_path = os.path.join(self.__base_dir, 'statics', 'linux.png')
+
+        if self.__sys_info.raw_info.name_id == 'manjaro':
+            return ansi.ansicolorimage.AnsiColorImage(
+                url_image=img_path, contrast=1.3, brightness=0.85,
+                hide_foreground_character=True, show_background_color=True)
 
         return ansi.ansicolorimage.AnsiColorImage(
             url_image=img_path, contrast=1.3, brightness=0.85)
