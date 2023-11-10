@@ -3,6 +3,9 @@ import sys
 import os
 import subprocess
 
+# noinspection PyPackageRequirements
+from xdg import IconTheme
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 import ansi.ansicolorimage
@@ -18,6 +21,7 @@ class InfoFetch(object):
     def __init__(self) -> None:
         """..."""
         self.__base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.__sys_info = info.formattedsysteminfo.FormattedSystemInfo()
 
         self.__logo_height = 25
         self.__logo_width = 50
@@ -72,19 +76,35 @@ class InfoFetch(object):
     def __get_logo(self) -> ansi.ansicolorimage:
         # ...
         img_path = ''
-        sysinfo = info.systeminfo.SystemInfo()
+
         logo_id = info.desktopentryparse.DesktopFile(
             os.path.join(self.__base_dir, 'statics', 'logobyidrc'))
 
-        if sysinfo.name_id.lower() in logo_id.content['[Logos]']:
-            img_name = logo_id.content['[Logos]'][sysinfo.name_id.lower()]
-            img_path = os.path.join(self.__base_dir, 'statics', img_name)
+        icons = self.__sys_info.raw_info.kde_icons
+        if not icons:
+            icons = self.__sys_info.raw_info.gtk_icons
+        if icons:
+            if self.__sys_info.raw_info.os_release['LOGO']:
+                img_path = IconTheme.getIconPath(
+                    self.__sys_info.raw_info.os_release['LOGO'],
+                    theme=self.__sys_info.raw_info.kde_icons)
+
+                print('>>>>>>>:', img_path)
+                if not img_path or not img_path.endswith('.png'):
+                    img_path = ''
+
+        if not img_path:
+            if self.__sys_info.raw_info.name_id.lower() in logo_id.content[
+                    '[Logos]']:
+                img_name = logo_id.content['[Logos]'][
+                    self.__sys_info.raw_info.name_id.lower()]
+                img_path = os.path.join(self.__base_dir, 'statics', img_name)
 
         if not os.path.isfile(img_path):
-            for obj_file in os.listdir('/usr/share/pixmaps'):
-                if sysinfo.name_id.lower() in obj_file.lower():
-                    if obj_file.endswith('.png'):
-                        img_path = os.path.join('/usr/share/pixmaps', obj_file)
+            for objfile in os.listdir('/usr/share/pixmaps'):
+                if self.__sys_info.raw_info.name_id.lower() in objfile.lower():
+                    if objfile.endswith('.png'):
+                        img_path = os.path.join('/usr/share/pixmaps', objfile)
                         break
 
         if not os.path.isfile(img_path):
@@ -100,8 +120,7 @@ class InfoFetch(object):
             ['tput', 'cols'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         tput_cols, _stderr = _cmd.communicate()
 
-        system_info_items = info.formattedsysteminfo.FormattedSystemInfo()
-        for key, value in system_info_items.system_fetch_as_dict.items():
+        for key, value in self.__sys_info.info_fetch_as_dict.items():
             value_width = int(tput_cols) - len(key) - self.__logo.width - 3
 
             if value:

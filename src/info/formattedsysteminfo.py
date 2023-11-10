@@ -15,7 +15,12 @@ class FormattedSystemInfo(object):
         self.__system_fetch_as_dict = None
 
     @property
-    def system_fetch_as_dict(self) -> dict:
+    def raw_info(self) -> info.systeminfo.SystemInfo:
+        """..."""
+        return self.__sys_info
+
+    @property
+    def info_fetch_as_dict(self) -> dict:
         """..."""
         if not self.__system_fetch_as_dict:
             self.__system_fetch_as_dict = {
@@ -287,5 +292,5 @@ class FormattedSystemInfo(object):
 if __name__ == '__main__':
     print('Resume system info:')
     fsi = FormattedSystemInfo()
-    for k, v in fsi.system_fetch_as_dict.items():
+    for k, v in fsi.info_fetch_as_dict.items():
         print(k, '->', v)
