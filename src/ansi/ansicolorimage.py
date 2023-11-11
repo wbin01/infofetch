@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from PIL import Image, ImageEnhance
 import re
-import warnings
 
 
 class AnsiColorImage(object):
@@ -202,7 +201,7 @@ class AnsiColorImage(object):
     @image_accent_color.setter
     def image_accent_color(self, color: str) -> None:
         if color:
-            regex_color = re.findall('\d+;\d+;\d+', color)
+            regex_color = re.findall(r'\d+;\d+;\d+', color)
             if regex_color:
                 if color == regex_color[0]:
                     self.__image_accent_color = color
