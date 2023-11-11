@@ -403,9 +403,8 @@ class SystemInfo(object):
             return self.__cpu
 
         cpu = subprocess.getoutput(
-            "cat /proc/cpuinfo | grep 'model name' | "
-            "sed -n 1p | sed 's/.*:.//g;s/(\w*)//g'").strip()
-        self.__cpu = cpu if cpu else None
+            "cat /proc/cpuinfo | grep 'model name' | sed -n 1p")
+        self.__cpu = cpu.split('\t')[-1].strip(":").strip() if cpu else None
 
         return self.__cpu
 
