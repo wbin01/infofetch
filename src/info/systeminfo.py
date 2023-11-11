@@ -560,6 +560,13 @@ class SystemInfo(object):
                 "xrandr | grep current | awk -F , '{print $2}'")
             resolution = resolution.replace(
                 ' current ', '').replace(' x ', 'x').strip()
+
+        if not resolution:
+            if os.path.isfile('/sys/class/drm/card0-Virtual-1/modes'):
+                with open('/sys/class/drm/card0-Virtual-1/modes', 'r') as fl:
+                    res = fl.readlines()
+                resolution = res if res else None
+
         self.__screen_resolution = resolution if resolution else None
 
         return self.__screen_resolution
@@ -708,12 +715,18 @@ class SystemInfo(object):
     @property
     def package_manager(self) -> str | None:
         """..."""
+        # /etc/redhat-release = yum
+        # /etc/arch-release = pacman
+        # /etc/gentoo-release = emerge
+        # /etc/SuSE-release = zypp
+        # /etc/debian_version = apt-get
+        # /etc/alpine-release = apk
+
         cmd_packages = {
             'dpkg': 'dpkg --get-selections | grep -cv deinstall$',
             'rpm': 'rpm -qa | wc -l',
             'pacman': 'pacman -Qq --color never | wc -l',
-            'eopkg': 'eopkg list-installed | wc -l',
-        }
+            'eopkg': 'eopkg list-installed | wc -l'}
 
         package_manager = ''
         packages = ''
@@ -732,6 +745,10 @@ class SystemInfo(object):
         else:
             self.__package_manager = package_manager
             self.__packages = packages
+
+        if self.__package_manager == 'rpm':
+            if '/' in subprocess.getoutput('whereis dnf'):
+                self.__package_manager = 'dnf'
 
         return self.__package_manager
 
