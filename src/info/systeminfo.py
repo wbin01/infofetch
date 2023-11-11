@@ -145,17 +145,19 @@ class SystemInfo(object):
 
         if 'ubuntu' in all_release_info['NAME'].lower():
             # Kubuntu
-            if 'settings.ini' in subprocess.getoutput(
-                    'ls /usr/share/kubuntu-default-settings/'):
-                hack_name = True
-                name = 'Kubuntu'
-                name_id = 'kubuntu'
+            if 'kubuntu-default-settings' in os.listdir('/usr/share/'):
+                if 'settings.ini' in os.listdir(
+                        '/usr/share/kubuntu-default-settings/'):
+                    hack_name = True
+                    name = 'Kubuntu'
+                    name_id = 'kubuntu'
 
             # Lubuntu
-            if 'openbox' in subprocess.getoutput('ls /usr/share/lubuntu/'):
-                hack_name = True
-                name = 'Lubuntu'
-                name_id = 'lubuntu'
+            elif 'lubuntu' in os.listdir('/usr/share/'):
+                if 'openbox' in os.listdir('/usr/share/lubuntu/'):
+                    hack_name = True
+                    name = 'Lubuntu'
+                    name_id = 'lubuntu'
 
             # ubuntu Budgie
             elif 'Budgie Welcome' in subprocess.getoutput(
@@ -165,11 +167,18 @@ class SystemInfo(object):
                 name_id = 'ubuntubudgie'
 
             # Xubuntu
-            elif 'applications' in subprocess.getoutput(
-                    'ls /usr/share/xubuntu/'):
-                hack_name = True
-                name = 'Xubuntu'
-                name_id = 'xubuntu'
+            elif 'xubuntu' in os.listdir('/usr/share/'):
+                if 'applications' in os.listdir('/usr/share/xubuntu/'):
+                    hack_name = True
+                    name = 'Xubuntu'
+                    name_id = 'xubuntu'
+
+            # Ubuntu Mate
+            elif 'ubuntu-mate' in os.listdir('/usr/share/'):
+                if 'settings-overlay' in os.listdir('/usr/share/ubuntu-mate/'):
+                    hack_name = True
+                    name = 'Ubuntu MATE'
+                    name_id = 'ubuntumate'
 
         if hack_name:
             all_release_info['NAME'] = name
