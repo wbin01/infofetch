@@ -167,7 +167,7 @@ class AnsiColorImage(object):
         # Colors ['red', 'blue', 'black']
         colors_found = []
         for line in self.__ansi_lines:
-            colors_found += re.findall(r'\\x1b\[\d+;\d+;\d+;\d+;\d+m', line)
+            colors_found += re.findall(r'\x1b\[\d+;\d+;\d+;\d+;\d+m', line)
 
         # Count {'red': 2, 'blue': 5, 'black': 22}
         colors_count = {}
