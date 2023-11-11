@@ -564,8 +564,8 @@ class SystemInfo(object):
         if not resolution:
             if os.path.isfile('/sys/class/drm/card0-Virtual-1/modes'):
                 with open('/sys/class/drm/card0-Virtual-1/modes', 'r') as fl:
-                    res = fl.readlines()
-                resolution = res if res else None
+                    lines = fl.readlines()
+                resolution = lines[0].strip('\n') if lines else None
 
         self.__screen_resolution = resolution if resolution else None
 
