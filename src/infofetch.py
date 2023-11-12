@@ -149,8 +149,9 @@ class InfoFetch(object):
                         value[:value_width - 3] + '...',
                         color_4_value_end)
                 else:
-                    infos += "\x1b[38;2;{}m{}\x1B[0m: {}\n".format(
-                        self.__logo.image_accent_color, key, value)
+                    infos += "\x1b[38;2;{}m{}\x1B[0m{}: {}{}\n".format(
+                        self.__logo.image_accent_color, key,
+                        color_4_value_start, value, color_4_value_end)
 
         return infos.split('\n')
 
