@@ -132,15 +132,22 @@ class InfoFetch(object):
             ['tput', 'cols'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         tput_cols, _stderr = _cmd.communicate()
 
+        color_4_value_start, color_4_value_end = '', ''
+        if self.__sys_info.raw_info.name_id == 'manjarolinux':
+            color_4_value_start = '\x1b[38;2;200;200;200m'
+            color_4_value_end = '\x1B[0m'
+
         for key, value in self.__sys_info.info_fetch_as_dict.items():
             value_width = int(tput_cols) - len(key) - self.__logo.width - 3
 
             if value:
                 if len(value) > value_width:
-                    infos += "\x1b[38;2;{}m{}\x1B[0m: {}\n".format(
+                    infos += "\x1b[38;2;{}m{}\x1B[0m{}: {}{}\n".format(
                         self.__logo.image_accent_color,
                         key,
-                        value[:value_width - 3] + '...')
+                        color_4_value_start,
+                        value[:value_width - 3] + '...',
+                        color_4_value_end)
                 else:
                     infos += "\x1b[38;2;{}m{}\x1B[0m: {}\n".format(
                         self.__logo.image_accent_color, key, value)
