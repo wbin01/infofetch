@@ -133,7 +133,7 @@ class InfoFetch(object):
         tput_cols, _stderr = _cmd.communicate()
 
         color_4_value_start, color_4_value_end = '', ''
-        if self.__sys_info.raw_info.name_id == 'manjarolinux':
+        if self.__sys_info.raw_info.name_id == 'manjaro':
             color_4_value_start = '\x1b[38;2;200;200;200m'
             color_4_value_end = '\x1B[0m'
 
