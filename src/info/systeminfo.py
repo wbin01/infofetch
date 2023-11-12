@@ -402,9 +402,12 @@ class SystemInfo(object):
         if self.__cpu:
             return self.__cpu
 
-        cpu = subprocess.getoutput(
-            "cat /proc/cpuinfo | grep 'model name' | sed -n 1p")
-        self.__cpu = cpu.split('\t')[-1].strip(":").strip() if cpu else None
+        cpu = re.sub(
+            r'\(\w+\)', '', subprocess.getoutput(
+                "cat /proc/cpuinfo | grep 'model name' | sed -n 1p")
+            .split('\t')[-1].strip(":").strip())
+
+        self.__cpu = cpu if cpu else None
 
         return self.__cpu
 
@@ -834,12 +837,13 @@ class SystemInfo(object):
 
         if self.desktop_environment == 'MATE':
             gtk_style = subprocess.getoutput(
-                'dconf read /org/mate/desktop/interface/gtk-theme')
+                'dconf read /org/mate/desktop/interface/gtk-theme').strip("'")
         else:
             gtk_style = subprocess.getoutput(
-                'gsettings get org.gnome.desktop.interface gtk-theme')
+                'gsettings get org.gnome.desktop.interface gtk-theme').strip(
+                "'")
 
-        self.__gtk_style = gtk_style if gtk_style.strip("'") else None
+        self.__gtk_style = gtk_style if gtk_style else None
 
         return self.__gtk_style
 
@@ -851,12 +855,14 @@ class SystemInfo(object):
 
         if self.desktop_environment == 'MATE':
             gtk_icons = subprocess.getoutput(
-                'dconf read /org/mate/desktop/interface/icon-theme')
+                'dconf read /org/mate/desktop/interface/icon-theme').strip(
+                "'")
         else:
             gtk_icons = subprocess.getoutput(
-                'gsettings get org.gnome.desktop.interface icon-theme')
+                'gsettings get org.gnome.desktop.interface icon-theme').strip(
+                "'")
 
-        self.__gtk_icons = gtk_icons if gtk_icons.strip("'") else None
+        self.__gtk_icons = gtk_icons if gtk_icons else None
 
         return self.__gtk_icons
 
