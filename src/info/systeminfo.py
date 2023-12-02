@@ -717,11 +717,13 @@ class SystemInfo(object):
     @property
     def package_manager(self) -> str | None:
         """..."""
-        # /etc/redhat-release = yum
         # /etc/arch-release = pacman
-        # /etc/gentoo-release = emerge
-        # /etc/SuSE-release = zypp
         # /etc/debian_version = apt-get
+        # /etc/gentoo-release = emerge
+
+        # /etc/redhat-release = yum
+        # /etc/SuSE-release = zypp
+
         # /etc/alpine-release = apk
 
         cmd_packages = {
