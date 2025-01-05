@@ -448,7 +448,8 @@ class SystemInfo(object):
             if gpuid.replace(':', '').replace('.', '').isdigit():
                 gpu_cmd = f'cat "/sys/bus/pci/devices/0000:{gpuid}/label"'
                 gpu_board = subprocess.getoutput(gpu_cmd).strip()
-                board = gpu_board if 'cat: ' not in gpuread else board
+                board = gpu_board if 'cat: ' not in gpu_board else board
+                # board = gpu_board if 'cat: ' not in gpuread else board
 
             gpuread = subprocess.getoutput('lspci | grep VGA')
             if 'lspci:' in gpuread or '/bin/sh:' in gpuread:
